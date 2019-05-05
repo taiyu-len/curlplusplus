@@ -4,4 +4,5 @@ target_sources(curl++ PRIVATE
 	easy_ref.cpp
 	global.cpp
 	util.cpp
+	types.cpp
 )

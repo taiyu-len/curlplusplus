@@ -1,5 +1,6 @@
 #ifndef CURLPLUSPLUS_EASY_INFO_HPP
 #define CURLPLUSPLUS_EASY_INFO_HPP
+#include "curl++/types.hpp"
 #include "curl++/util.hpp"
 #include <string>
 #include <utility>
@@ -22,6 +23,7 @@ struct info : private detail::translate<T>
 /// Curl info types
 #define CURL_INFO_TYPE(NAME, TYPE) info<CURLINFO_##NAME, TYPE>
 using url = CURL_INFO_TYPE(EFFECTIVE_URL, std::string);
+using response_code = CURL_INFO_TYPE(RESPONSE_CODE, long); // TODO make response code type
 
 #undef CURL_INFO_TYPE
 //@}

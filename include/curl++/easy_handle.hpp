@@ -1,7 +1,7 @@
 #ifndef CURLPLUSPLUS_EASY_HANDLE_HPP
 #define CURLPLUSPLUS_EASY_HANDLE_HPP
-#include "curl++/util.hpp"
 #include "curl++/easy_ref.hpp"
+#include "curl++/types.hpp"
 #include <curl/curl.h>
 // Contains the light weight wrapper over a curl easy handle
 
@@ -23,27 +23,6 @@ protected:
 	/** Transfer ownership over handle. */
 	easy_handle(easy_handle &&) noexcept;
 	easy_handle& operator=(easy_handle &&) noexcept;
-	//
-	// callbacks are to be set by the curl::easy<T> type to
-	// (static) member functions from T, providing type safetly guarantees.
-	//
-	//@{
-	/** Function signatures for callbacks. */
-	template<class T>
-	using cleanup_cb  = int(T*);
-	template<class T>
-	using debug_cb    = int(CURL*, infotype, char*, size_t, T*);
-	template<class T>
-	using header_cb   = size_t(char *, size_t, size_t, T*);
-	template<class T>
-	using read_cb     = size_t(char *, size_t, size_t, T*);
-	template<class T>
-	using seek_cb     = int(T*, off_t, int);
-	template<class T>
-	using write_cb    = size_t(char *, size_t, size_t, T*);
-	template<class T>
-	using xferinfo_cb = int(T*, off_t, off_t, off_t, off_t);
-	//@}
 
 	//@{
 	/** Sets both the callback and data options safely. */

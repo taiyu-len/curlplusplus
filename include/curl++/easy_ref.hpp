@@ -1,20 +1,11 @@
 #ifndef CURLPLUSPLUS_EASY_REF_HPP
 #define CURLPLUSPLUS_EASY_REF_HPP
-#include "curl++/util.hpp"
-#include "curl++/easy_opt.hpp"
 #include "curl++/easy_info.hpp"
+#include "curl++/easy_opt.hpp"
+#include "curl++/types.hpp"
 #include <curl/curl.h>
 
 namespace curl {
-/** Flags used for pause function. */
-enum pause : long
-{
-	recv = CURLPAUSE_RECV,
-	send = CURLPAUSE_SEND,
-	all  = CURLPAUSE_ALL,
-	cont = CURLPAUSE_CONT
-};
-
 /** Light non owning wrapper around a CURL_easy handle.
  *
  */

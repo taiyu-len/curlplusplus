@@ -6,5 +6,6 @@ set_property(TARGET curl++ PROPERTY PUBLIC_HEADER
 	curl++/easy_ref.hpp
 	curl++/global.hpp
 	curl++/util.hpp
+	curl++/types.hpp
 )
 target_include_directories(curl++ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
