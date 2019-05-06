@@ -6,7 +6,6 @@
 #include <iostream>
 struct eh : public curl::easy<eh> {
 	size_t handle(curl::event::write w) {
-		// pause causes perform to enter some infinite loop or something
 		return 0;
 	}
 	size_t handle(curl::event::header x) {
@@ -20,6 +19,7 @@ int main() {
 	namespace i = curl::info;
 	eh h;
 	h.set(o::url{"www.example.com"});
+	h.set(o::verbose{true});
 	std::cout << h.perform().what() << '\n';
 }
 

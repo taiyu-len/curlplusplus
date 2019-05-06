@@ -14,8 +14,7 @@ struct buffer_t {
 
 /* easy event types */
 namespace event {
-// TODO fancier types with convenient functions
-// consider better 
+// TODO consider fancier types with convenient functions
 struct cleanup {};
 struct debug   : buffer_t
 {

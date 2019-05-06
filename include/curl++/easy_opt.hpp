@@ -46,7 +46,7 @@ struct option : private detail::translate<T>
 	 */
 	template<
 		typename S = T,
-		typename = std::enable_if_t<detail::translate<T>::allow_inner>>
+		typename = std::enable_if_t<detail::translate<S>::allow_inner>>
 	explicit option(inner_t x): value(x) {};
 	inner_t value;
 };
@@ -55,6 +55,7 @@ struct option : private detail::translate<T>
 /// Curl option types
 #define CURL_OPTION_TYPE(NAME, TYPE) option<CURLOPT_##NAME, TYPE>
 using url = CURL_OPTION_TYPE(URL, std::string);
+using verbose = CURL_OPTION_TYPE(VERBOSE, bool);
 
 #undef CURL_OPTION_TYPE
 //@}

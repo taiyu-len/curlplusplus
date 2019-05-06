@@ -8,6 +8,7 @@ target_compile_options(curl++ PUBLIC -fsanitize=address)
 target_link_options(curl++ PUBLIC -fsanitize=address)
 target_compile_options(curl++ PUBLIC -std=c++14)
 target_compile_options(curl++ PUBLIC -Wall)
+
 target_link_libraries(curl++ PUBLIC curl)
 target_include_directories(curl++ PUBLIC include)
 
