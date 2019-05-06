@@ -40,55 +40,51 @@ namespace detail {
 template<class E> struct event_info
 {
 	using return_t = size_t;
+	using signature = size_t(char *, size_t, size_t, void*);
 	template<typename T>
-	using signature = size_t(char *, size_t, size_t, T*);
-	template<typename T>
-	static return_t invoke(char *d, size_t s, size_t t, T* x) noexcept
+	static return_t invoke(char *d, size_t s, size_t t, void* x) noexcept
 	{
-		return x->handle(E{buffer_t{d, s*t}});
+		return static_cast<T*>(x)->handle(E{buffer_t{d, s*t}});
 	}
 };
 template<> struct event_info<event::cleanup>
 {
 	using return_t = int;
+	using signature = int(void*);
 	template<typename T>
-	using signature = int(T*);
-	template<typename T>
-	static return_t invoke(T *x) noexcept {
-		return x->handle(event::cleanup{});
+	static return_t invoke(void *x) noexcept {
+		return static_cast<T*>(x)->handle(event::cleanup{});
 	}
 };
 template<> struct event_info<event::debug>
 {
 	using return_t = int;
+	using signature = int(CURL*, infotype, char*, size_t, void*);
 	template<typename T>
-	using signature = int(CURL*, infotype, char*, size_t, T*);
-	template<typename T>
-	static return_t invoke(CURL* e, infotype i, char* c, size_t s, T* x) noexcept
+	static return_t invoke(CURL* e, infotype i, char* c, size_t s, void* x) noexcept
 	{
-		return x->handle(event::debug{buffer_t{c, s}, e, i});
+		return static_cast<T*>(x)->handle(
+			event::debug{buffer_t{c, s}, e, i});
 	}
 };
 template<> struct event_info<event::seek>
 {
 	using return_t = int;
+	using signature = int(void*, off_t, int);
 	template<typename T>
-	using signature = int(T*, off_t, int);
-	template<typename T>
-	static return_t invoke(T* x, off_t offset, int origin) noexcept
+	static return_t invoke(void* x, off_t offset, int origin) noexcept
 	{
-		return x->handle(event::seek{offset, origin});
+		return static_cast<T*>(x)->handle(event::seek{offset, origin});
 	}
 };
 template<> struct event_info<event::progress>
 {
 	using return_t = int;
+	using signature = int(void*, off_t, off_t, off_t, off_t);
 	template<typename T>
-	using signature = int(T*, off_t, off_t, off_t, off_t);
-	template<typename T>
-	static return_t invoke(T* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
+	static return_t invoke(void* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
 	{
-		return x->handle(event::progress{dt, dn, ut, un});
+		return static_cast<T*>(x)->handle(event::progress{dt, dn, ut, un});
 	}
 };
 } // namespace detail
@@ -100,7 +96,7 @@ template<typename E, typename T, typename = void>
 struct mem_fn
 {
 	static constexpr
-	typename event_info<E>::template signature<T>* fptr() noexcept {
+	typename event_info<E>::signature* fptr() noexcept {
 		return nullptr;
 	}
 };
@@ -109,7 +105,7 @@ template<typename E, typename T>
 struct mem_fn<E, T, decltype(std::declval<T>().handle(std::declval<E>()), void())>
 {
 	static constexpr
-	typename event_info<E>::template signature<T>* fptr() noexcept
+	typename event_info<E>::signature* fptr() noexcept
 	{
 		return &event_info<E>::template invoke<T>;
 	}
@@ -122,12 +118,11 @@ namespace detail {
 template<class event>
 struct callback
 {
-	using signature = typename event_info<event>::template signature<void>;
 	/// Construct data from argument, and function pointer from a member
 	/// function of T if it exists, otherwise make both nullptr.
 	template<typename T>
 	callback(T* x) noexcept
-	: fptr(reinterpret_cast<signature*>(detail::mem_fn<event, T>::fptr()))
+	: fptr(detail::mem_fn<event, T>::fptr())
 	, data(static_cast<void*>(x))
 	{ /* NOOP */ }
 
@@ -143,7 +138,7 @@ struct callback
 	void set_handler(CURL *) const noexcept;
 private:
 	// type erased function pointer taking void*
-	signature* fptr;
+	typename event_info<event>::signature* fptr;
 	// type erased data passed to
 	void* data;
 };
