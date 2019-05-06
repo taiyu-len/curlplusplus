@@ -26,7 +26,7 @@ struct easy_ref
 	 * example: @code easy.setopt(url{"www.example.com"}); @endcode
 	 */
 	template<CURLoption o, typename T>
-	code setopt(option::option<o, T> x) noexcept
+	code set(option::option<o, T> x) noexcept
 	{
 		return curl_easy_setopt(handle, o, x.value);
 	}
@@ -35,7 +35,7 @@ struct easy_ref
 	 * example: @code easy.getinfo(url{}); @endcode
 	 */
 	template<CURLINFO i, typename T>
-	T getinfo(info::info<i, T>) const noexcept
+	T get(info::info<i, T>) const noexcept
 	{
 		typename info::info<i, T>::inner_t x;
 		curl_easy_setopt(handle, i, &x);

@@ -8,7 +8,8 @@
 namespace curl {
 // dumb buffer type. TODO replace with fancy span like type
 struct buffer_t {
-	char* data; size_t size;
+	char* data;
+	size_t size;
 };
 
 /* easy event types */
@@ -16,11 +17,17 @@ namespace event {
 // TODO fancier types with convenient functions
 // consider better 
 struct cleanup {};
-struct debug   { curl::easy_ref handle; infotype info; buffer_t data; };
-struct header  { buffer_t data; };
-struct read    { buffer_t data; };
+struct debug   : buffer_t
+{
+	debug(buffer_t b, easy_ref h, infotype i)
+	: buffer_t{b}, handle{h}, info{i} {}
+	easy_ref handle;
+	infotype info;
+};
+struct header  : buffer_t { explicit header(buffer_t b):buffer_t{b} {} };
+struct read    : buffer_t { explicit read(buffer_t b):buffer_t{b} {} };
 struct seek    { off_t offset; int origin; };
-struct write   { buffer_t data; };
+struct write   : buffer_t { explicit write(buffer_t b):buffer_t{b} {} };
 struct progress{ off_t dltotal, dlnow, ultotal, ulnow; };
 } // namespace event
 
@@ -56,7 +63,7 @@ template<> struct event_info<event::debug>
 	template<typename T>
 	static return_t invoke(CURL* e, infotype i, char* c, size_t s, T* x) noexcept
 	{
-		return x->handle(event::debug{e, i, buffer_t{c, s}});
+		return x->handle(event::debug{buffer_t{c, s}, e, i});
 	}
 };
 template<> struct event_info<event::seek>
@@ -89,11 +96,14 @@ namespace detail {
 template<typename E, typename T, typename = void>
 struct mem_fn
 {
-	static constexpr std::nullptr_t fptr() noexcept { return nullptr; }
+	static constexpr
+	typename event_info<E>::template signature<T>* fptr() noexcept {
+		return nullptr;
+	}
 };
 
 template<typename E, typename T>
-struct mem_fn<E, T, decltype(std::declval<T>().handle(E{}), void())>
+struct mem_fn<E, T, decltype(std::declval<T>().handle(std::declval<E>()), void())>
 {
 	static constexpr
 	typename event_info<E>::template signature<T>* fptr() noexcept
@@ -109,12 +119,13 @@ namespace detail {
 template<class event>
 struct callback
 {
+	using signature = typename event_info<event>::template signature<void>;
 	/// Construct data from argument, and function pointer from a member
 	/// function of T if it exists, otherwise make both nullptr.
 	template<typename T>
 	callback(T* x) noexcept
-	: fptr(detail::mem_fn<event, T>::fptr())
-	, data(x)
+	: fptr(reinterpret_cast<signature*>(detail::mem_fn<event, T>::fptr()))
+	, data(static_cast<void*>(x))
 	{ /* NOOP */ }
 
 	/// Construct data from D* argument, and function pointer from static
@@ -129,7 +140,7 @@ struct callback
 	void set_handler(CURL *) const noexcept;
 private:
 	// type erased function pointer taking void*
-	typename event_info<event>::template signature<void>* fptr;
+	signature* fptr;
 	// type erased data passed to
 	void* data;
 };

@@ -15,7 +15,6 @@ OPTION(read, READ);
 OPTION(seek, SEEK);
 OPTION(write, WRITE);
 OPTION(progress, XFERINFO);
-
 } // namespace
 
 template<typename E>
@@ -28,11 +27,11 @@ void callback<E>::set_handler(CURL* handle) const noexcept
 // TODO? add specialized version for debug/progress that set VERBOSE/PROGRESS
 // option
 template void callback<event::debug>::set_handler(CURL*) const noexcept;
-template void callback<event::header>::set_handler(CURL*)const noexcept;
-template void callback<event::read>::set_handler(CURL*)const noexcept;
-template void callback<event::seek>::set_handler(CURL*)const noexcept;
-template void callback<event::write>::set_handler(CURL*)const noexcept;
-template void callback<event::progress>::set_handler(CURL*)const noexcept;
+template void callback<event::header>::set_handler(CURL*) const noexcept;
+template void callback<event::read>::set_handler(CURL*) const noexcept;
+template void callback<event::seek>::set_handler(CURL*) const noexcept;
+template void callback<event::write>::set_handler(CURL*) const noexcept;
+template void callback<event::progress>::set_handler(CURL*) const noexcept;
 
 // specialized version for cleaunp
 template<>
