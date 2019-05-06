@@ -1,10 +1,13 @@
-/*
- * Example source code testing out all features.
- */
+an experimental lightweight wrapper library focused on automatically setting
+event handlers on construction.
 
+example code
+```c++
 #include "curl++/easy.hpp"
 #include <iostream>
-struct eh : public curl::easy<eh> {
+
+// Prints headers to stdout
+struct eh : curl::easy<eh> {
 	size_t write(curl::event::write w) {
 		return w.pause;
 	}
@@ -15,10 +18,8 @@ struct eh : public curl::easy<eh> {
 };
 
 int main() {
-	namespace o = curl::option;
-	namespace i = curl::info;
 	eh h;
-	h.set(o::url{"www.example.com"});
+	h.set(curl::option::url{"www.example.com"});
 	h.perform();
 }
-
+```

@@ -13,7 +13,6 @@ OPTION(debug, DEBUG);
 OPTION(header, HEADER);
 OPTION(read, READ);
 OPTION(seek, SEEK);
-OPTION(write, WRITE);
 OPTION(progress, XFERINFO);
 } // namespace
 
@@ -30,8 +29,23 @@ template void callback<event::debug>::set_handler(CURL*) const noexcept;
 template void callback<event::header>::set_handler(CURL*) const noexcept;
 template void callback<event::read>::set_handler(CURL*) const noexcept;
 template void callback<event::seek>::set_handler(CURL*) const noexcept;
-template void callback<event::write>::set_handler(CURL*) const noexcept;
 template void callback<event::progress>::set_handler(CURL*) const noexcept;
+
+// Specialized version of write, to set it to a no-op
+size_t nowrite(void*, size_t x, size_t y, void*) {
+	return x*y;
+}
+template<>
+void callback<event::write>::set_handler(CURL *handle) const noexcept
+{
+	if (fptr) {
+		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, fptr);
+		curl_easy_setopt(handle, CURLOPT_WRITEDATA, data);
+	} else {
+		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &nowrite);
+		curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);
+	}
+}
 
 // specialized version for cleaunp
 template<>

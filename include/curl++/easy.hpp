@@ -4,15 +4,6 @@
 #include <type_traits>
 #include <curl/curl.h>
 namespace curl {
-namespace detail
-{
-/// Provides common default error handler for curl::easy
-struct default_error
-{
-	void error(curl::code) const noexcept {};
-};
-} // namespace detail
-
 /** CRTP easy handle that automatically sets callbacks and data.
  * callbacks are set in constructor based on what overloads of the handle
  * function exists in the parent type.
@@ -69,7 +60,8 @@ struct printer : curl::easy<printer> {
  *
  */
 template<typename T>
-struct easy : public easy_handle, public detail::default_error
+struct easy
+	: public easy_handle
 {
 	easy() {
 		auto self = static_cast<T*>(this);
@@ -82,6 +74,7 @@ struct easy : public easy_handle, public detail::default_error
 		set_handler(detail::callback< event::write    >(self));
 		set_handler(detail::callback< event::progress >(self));
 	}
+	void handle(curl::code) const noexcept {};
 private:
 	using easy_handle::set_handler;
 };

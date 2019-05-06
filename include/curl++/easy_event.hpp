@@ -27,7 +27,10 @@ struct debug   : buffer_t
 struct header  : buffer_t { explicit header(buffer_t b):buffer_t{b} {} };
 struct read    : buffer_t { explicit read(buffer_t b):buffer_t{b} {} };
 struct seek    { off_t offset; int origin; };
-struct write   : buffer_t { explicit write(buffer_t b):buffer_t{b} {} };
+struct write   : buffer_t {
+	explicit write(buffer_t b):buffer_t{b} {}
+	static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
+};
 struct progress{ off_t dltotal, dlnow, ultotal, ulnow; };
 } // namespace event
 
@@ -132,7 +135,7 @@ struct callback
 	/// member function of T
 	template<typename T, typename D>
 	callback(T*, D* x) noexcept
-	: fptr(/* detail::bar<S, T>::fptr() */)
+	: fptr(/* TODO detail::bar<S, T>::fptr() */)
 	, data(x)
 	{ /* NOOP */ }
 
