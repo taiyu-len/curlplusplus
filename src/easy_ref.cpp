@@ -8,9 +8,14 @@ easy_ref::easy_ref(CURL* handle) noexcept
 	// NOOP
 }
 
-auto easy_ref::pause(curl::pause flag) const noexcept -> curl::code
+auto easy_ref::pause(curl::pause flag) noexcept -> curl::code
 {
 	return curl_easy_pause(handle, flag);
+}
+
+auto easy_ref::perform() noexcept -> curl::code
+{
+	return curl_easy_perform(handle);
 }
 
 void easy_ref::userdata(void *data) noexcept

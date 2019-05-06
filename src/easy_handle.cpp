@@ -39,5 +39,4 @@ easy_handle::~easy_handle() noexcept
 		curl_easy_cleanup(handle);
 	}
 }
-
 } // namespace curl

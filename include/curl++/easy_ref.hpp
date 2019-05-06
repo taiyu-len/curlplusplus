@@ -18,7 +18,9 @@ struct easy_ref
 	 * @param flag whether to pause or resume transfer
 	 * see curl_easy_pause
 	 */
-	auto pause(curl::pause flag) const noexcept -> curl::code;
+	auto pause(curl::pause flag) noexcept -> curl::code;
+
+	auto perform() noexcept -> curl::code;
 
 	/** Set Easy handle options.
 	 * example: @code easy.setopt(url{"www.example.com"}); @endcode

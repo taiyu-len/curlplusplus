@@ -72,7 +72,15 @@ template<typename T>
 struct easy : public easy_handle, public detail::default_error
 {
 	easy() {
-		
+		auto self = static_cast<T*>(this);
+		// set event handlers conditionally.
+		set_handler(detail::callback< event::cleanup  >(self));
+		set_handler(detail::callback< event::debug    >(self));
+		set_handler(detail::callback< event::header   >(self));
+		set_handler(detail::callback< event::read     >(self));
+		set_handler(detail::callback< event::seek     >(self));
+		set_handler(detail::callback< event::write    >(self));
+		set_handler(detail::callback< event::progress >(self));
 	}
 private:
 	using easy_handle::set_handler;
