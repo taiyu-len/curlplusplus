@@ -8,8 +8,8 @@ example code
 
 // Prints headers to stdout
 struct eh : curl::easy<eh> {
-	size_t write(curl::event::write w) {
-		return w.pause;
+	size_t handle(curl::event::write w) {
+		return 0;
 	}
 	size_t handle(curl::event::header x) {
 		std::printf("%*s", x.size, x.data);

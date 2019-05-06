@@ -5,8 +5,9 @@
 #include "curl++/easy.hpp"
 #include <iostream>
 struct eh : public curl::easy<eh> {
-	size_t write(curl::event::write w) {
-		return w.pause;
+	size_t handle(curl::event::write w) {
+		// pause causes perform to enter some infinite loop or something
+		return 0;
 	}
 	size_t handle(curl::event::header x) {
 		std::printf("%*s", x.size, x.data);
@@ -19,6 +20,6 @@ int main() {
 	namespace i = curl::info;
 	eh h;
 	h.set(o::url{"www.example.com"});
-	h.perform();
+	std::cout << h.perform().what() << '\n';
 }
 
