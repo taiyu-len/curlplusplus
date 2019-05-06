@@ -1,6 +1,8 @@
 #ifndef CURLPLUSPLUS_TYPES_HPP
 #define CURLPLUSPLUS_TYPES_HPP
+#include <cstddef>
 #include <curl/curl.h>
+#include <type_traits>
 namespace curl {
 // simple typedefs of curl types
 using infotype = curl_infotype;
@@ -47,16 +49,6 @@ enum pause : long
 	all  = CURLPAUSE_ALL,
 	cont = CURLPAUSE_CONT
 };
-
-//@{
-/** callback types for curl easy handles */
-template<class T> using cleanup_cb  = int(T*);
-template<class T> using debug_cb    = int(CURL*, infotype, char*, size_t, T*);
-template<class T> using header_cb   = size_t(char *, size_t, size_t, T*);
-template<class T> using read_cb     = size_t(char *, size_t, size_t, T*);
-template<class T> using seek_cb     = int(T*, off_t, int);
-template<class T> using write_cb    = size_t(char *, size_t, size_t, T*);
-template<class T> using xferinfo_cb = int(T*, off_t, off_t, off_t, off_t);
 } // namespace curl
 
 #endif // CURLPLUSPLUS_TYPES_HPP
