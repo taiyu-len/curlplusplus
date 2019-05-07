@@ -20,10 +20,10 @@ struct easy_handle : public easy_ref
 	/** cleanup handle and associated state. */
 	~easy_handle() noexcept;
 
-protected:
 	/** Transfer ownership over handle. */
 	easy_handle(easy_handle &&) noexcept;
 	easy_handle& operator=(easy_handle &&) noexcept;
+protected:
 
 	/** Set the event handler. */
 	template<class E>

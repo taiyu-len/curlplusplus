@@ -6,7 +6,7 @@ const char* code::what() const noexcept
 }
 code::operator bool() const noexcept
 {
-	return value == CURLE_OK;
+	return value != CURLE_OK;
 }
 
 const char* mcode::what() const noexcept
@@ -15,7 +15,7 @@ const char* mcode::what() const noexcept
 }
 mcode::operator bool() const noexcept
 {
-	return value == CURLM_OK;
+	return value != CURLM_OK;
 }
 
 const char* shcode::what() const noexcept
@@ -24,7 +24,7 @@ const char* shcode::what() const noexcept
 }
 shcode::operator bool() const noexcept
 {
-	return value == CURLSHE_OK;
+	return value != CURLSHE_OK;
 }
 
 const char* ucode::what() const noexcept
@@ -71,7 +71,7 @@ const char* ucode::what() const noexcept
 }
 ucode::operator bool() const noexcept
 {
-	return value == CURLUE_OK;
+	return value != CURLUE_OK;
 }
 } // namespace curl
 

@@ -54,8 +54,9 @@ struct option : private detail::translate<T>
 //@{
 /// Curl option types
 #define CURL_OPTION_TYPE(NAME, TYPE) option<CURLOPT_##NAME, TYPE>
-using url = CURL_OPTION_TYPE(URL, std::string);
-using verbose = CURL_OPTION_TYPE(VERBOSE, bool);
+using url             = CURL_OPTION_TYPE(URL, std::string);
+using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
+using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
 
 #undef CURL_OPTION_TYPE
 //@}

@@ -94,6 +94,7 @@ struct easy
 	}
 	void handle(curl::code) const noexcept {};
 private:
+	using easy_handle::easy_handle;
 	using easy_handle::set_handler;
 };
 
