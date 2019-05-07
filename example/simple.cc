@@ -1,4 +1,4 @@
-#include <curl++/easy.hpp>
+#include <curl++/easy_handle.hpp>
 #include <iostream>
 #include <exception>
 int main() try

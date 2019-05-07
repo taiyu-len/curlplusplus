@@ -2,7 +2,6 @@
 #define CURLPLUSPLUS_EXTRACT_FUNCTION_HPP
 #include <cstddef>
 #include <type_traits>
-#include <curl/curl.h>
 namespace curl {
 namespace detail { /* event_fn */
 /* templated object to specialize to obtain function pointer for event and type.
@@ -46,30 +45,6 @@ struct extract_mem_fn<E, T, can_handle<E, T>>
 	{
 		return &event_fn<E>::template invoke<T>;
 	}
-};
-} // namespace detail
-namespace detail { /* extract_fn */
-/* Object that constructs data and function pointer for event from T* */
-template<class E>
-struct extract_fn
-{
-	template<typename T>
-	extract_fn(T* x) noexcept
-	: fptr(detail::extract_mem_fn<E, T>::fptr())
-	, data(static_cast<void*>(x))
-	{ /* NOOP */ }
-
-	// TODO: static member version with extra data argument
-
-	// sets the handler for this event for the curl object.
-	// defined in source files per event
-	void easy(CURL *) const noexcept;
-	void multi(CURLM *) const noexcept;
-private:
-	// type erased function pointer taking void*
-	typename event_fn<E>::signature* fptr;
-	// type erased data passed to
-	void* data;
 };
 } // namespace detail
 } // namespace curl

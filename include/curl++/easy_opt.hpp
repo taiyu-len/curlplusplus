@@ -1,64 +1,58 @@
 #ifndef CURLPLUSPLUS_EASY_OPT_HPP
 #define CURLPLUSPLUS_EASY_OPT_HPP
+#include "curl++/option.hpp"
 #include "curl++/types.hpp"
-#include "curl++/translate_type.hpp"
-#include <utility>
+#include <curl/curl.h>
 #include <string>
-
+#include <utility>
 namespace curl {
-/** Flags used to set netrc easyopt. */
-enum class netrc : long
+namespace detail { /* easy_option */
+template<CURLoption option, typename T, long value=0>
+struct easy_option : public option_base<CURLoption, option, T>
 {
-	optional = CURL_NETRC_OPTIONAL,
-	ignored  = CURL_NETRC_IGNORED,
-	required = CURL_NETRC_REQUIRED
+	using option_base<CURLoption, option, T>::option_base;
 };
 
-/** Flags used to set httpauth easyopt. */
-enum httpauth : unsigned long
-{
-	basic     = CURLAUTH_BASIC,
-	digest    = CURLAUTH_DIGEST,
-	digest_ie = CURLAUTH_DIGEST_IE,
-	bearer    = CURLAUTH_BEARER,
-	negotiate = CURLAUTH_NEGOTIATE,
-	ntlm      = CURLAUTH_NTLM,
-	ntlm_wb   = CURLAUTH_NTLM_WB,
-	any       = CURLAUTH_ANY,
-	anysafe   = CURLAUTH_ANYSAFE,
-	only      = CURLAUTH_ONLY,
-};
+/* Specializatoins for enumerated types */
+#define SPECIALIZE_OPTION_ENUM(NAME) \
+template<long value> \
+struct easy_option<CURLOPT_##NAME, long, value> \
+: public option_enum<CURLoption, CURLOPT_##NAME, value> \
+{ using option_enum<CURLoption, CURLOPT_##NAME, value>::option_enum; }
+SPECIALIZE_OPTION_ENUM(NETRC);
+SPECIALIZE_OPTION_ENUM(HTTPAUTH);
 
-namespace option {
-/** Base template type for options.
- * @param o the option value.
- * @param T the user facing argument type.
- */
-template<CURLoption o, typename T>
-struct option : private detail::translate<T>
-{
-	using typename detail::translate<T>::outer_t;
-	using typename detail::translate<T>::inner_t;
-	explicit option(outer_t x): value(this->to_inner(x)) {};
-	/** restrict constructing option from inner type unless permitted.
-	 * currently only std::string permits creating option type from const
-	 * char*
-	 */
-	template<
-		typename S = T,
-		typename = std::enable_if_t<detail::translate<S>::allow_inner>>
-	explicit option(inner_t x): value(x) {};
-	inner_t value;
-};
+#undef SPECIALIZE_OPTION_ENUM
+} // namespace detail
+namespace option { /* curl easy options */
 
 //@{
 /// Curl option types
-#define CURL_OPTION_TYPE(NAME, TYPE) option<CURLOPT_##NAME, TYPE>
+#define CURL_OPTION_TYPE(NAME, TYPE) detail::easy_option<CURLOPT_##NAME, TYPE>
+#define CURL_ENUM_TYPE(NAME, VALUE)  detail::easy_option<CURLOPT_##NAME, long, VALUE>
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
-
+namespace netrc {
+	using optional = CURL_ENUM_TYPE(NETRC, CURL_NETRC_OPTIONAL);
+	using ignored  = CURL_ENUM_TYPE(NETRC, CURL_NETRC_IGNORED);
+	using required = CURL_ENUM_TYPE(NETRC, CURL_NETRC_REQUIRED);
+} // namespace netrc
+namespace httpauth {
+	using basic     = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_BASIC);
+	using digest    = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_DIGEST);
+	using digest_ie = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_DIGEST_IE);
+	using bearer    = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_BEARER);
+	using negotiate = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_NEGOTIATE);
+	using ntlm      = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_NTLM);
+	using ntlm_wb   = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_NTLM_WB);
+	using any       = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_ANY);
+	using anysafe   = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_ANYSAFE);
+	using only      = CURL_ENUM_TYPE(HTTPAUTH, CURLAUTH_ONLY);
+} // namespace httpauth
+#undef CURL_ENUM_TYPE
 #undef CURL_OPTION_TYPE
+/// Option types for setting events
 //@}
 } // namespace option
 } // namespace curl

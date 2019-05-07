@@ -6,7 +6,7 @@ namespace curl {
 /* Template machinery to translate between user facing argument types, and
  * internal curl types.
  */
-namespace detail {
+namespace detail { /* translate base */
 // Simple base case where O and I are convertable to eachother via static_cast
 template<typename O, typename I>
 struct translate_base
@@ -40,7 +40,8 @@ struct translate_base<std::string, const char*>
 		return static_cast<outer_t>(x);
 	}
 };
-
+} // namespace detail
+namespace detail { /* translate */
 // base case where inner and outer are the same.
 template<typename O, typename = void>
 struct translate: public translate_base<O, O> {};
@@ -55,13 +56,6 @@ struct translate<std::string, void>: translate_base<std::string, const char*>
 // Specialize bool <-> long
 template<>
 struct translate<bool, void>: translate_base<bool, long> {};
-
-// Specialize enums <-> underlying type
-template<typename T>
-struct translate<T, std::enable_if_t<std::is_enum<T>::value>>
-: translate_base<T, std::underlying_type_t<T>> {};
 } // namespace detail
 } // namespace curl
 #endif // CURLPLUSPLUS_TRANSLATE_TYPE_HPP
-
-

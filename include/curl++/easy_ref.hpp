@@ -4,10 +4,11 @@
 #include "curl++/easy_opt.hpp"
 #include "curl++/types.hpp"
 #include <curl/curl.h>
-
 namespace curl {
-/** Light non owning wrapper around a CURL_easy handle.
- *
+/* Lightweight non-owning reference to a curl easy handle.
+ * Allows setting options, getting information, and a most operations on an easy
+ * handle.
+ * settings regarding event handling are not handled by this.
  */
 struct easy_ref
 {
@@ -25,8 +26,8 @@ struct easy_ref
 	/** Set Easy handle options.
 	 * example: @code easy.setopt(url{"www.example.com"}); @endcode
 	 */
-	template<CURLoption o, typename T>
-	code set(option::option<o, T> x) noexcept
+	template<CURLoption o, typename T, long v>
+	code set(detail::easy_option<o, T, v> x) noexcept
 	{
 		return curl_easy_setopt(handle, o, x.value);
 	}
@@ -41,13 +42,6 @@ struct easy_ref
 		curl_easy_getinfo(handle, i, &x);
 		return info::info<i, T>::to_outer(x);
 	}
-
-	//@{
-	/** Sets and gets user defined data.
-	 */
-	void  userdata(void *data) noexcept;
-	void* userdata() const noexcept;
-	//@}
 protected:
 	CURL* handle;
 };
