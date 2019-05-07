@@ -1,7 +1,7 @@
 #ifndef CURLPLUSPLUS_EASY_OPT_HPP
 #define CURLPLUSPLUS_EASY_OPT_HPP
 #include "curl++/types.hpp"
-#include "curl++/util.hpp"
+#include "curl++/translate_type.hpp"
 #include <utility>
 #include <string>
 

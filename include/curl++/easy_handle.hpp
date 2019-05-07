@@ -1,8 +1,8 @@
 #ifndef CURLPLUSPLUS_EASY_HANDLE_HPP
 #define CURLPLUSPLUS_EASY_HANDLE_HPP
 #include "curl++/easy_ref.hpp"
-#include "curl++/easy_event.hpp"
 #include "curl++/types.hpp"
+#include "curl++/extract_function.hpp"
 #include <curl/curl.h>
 // Contains the light weight wrapper over a curl easy handle
 
@@ -27,15 +27,15 @@ protected:
 
 	/** Set the event handler. */
 	template<class E>
-	void set_handler(detail::callback<E>) noexcept;
+	void set_handler(detail::extract_fn<E>) noexcept;
 private:
 	using easy_ref::handle;
 };
 
 template<class E>
-void easy_handle::set_handler(detail::callback<E> x) noexcept
+void easy_handle::set_handler(detail::extract_fn<E> x) noexcept
 {
-	x.set_handler(this->handle);
+	x.easy(this->handle);
 }
 } // namespace curl
 #endif // CURLPLUSPLUS_EASY_HANDLE_HPP

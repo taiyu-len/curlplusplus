@@ -1,5 +1,5 @@
-#ifndef CURLPLUSPLUS_UTIL_HPP
-#define CURLPLUSPLUS_UTIL_HPP
+#ifndef CURLPLUSPLUS_TRANSLATE_TYPE_HPP
+#define CURLPLUSPLUS_TRANSLATE_TYPE_HPP
 #include <string>
 #include <type_traits>
 namespace curl {
@@ -7,6 +7,7 @@ namespace curl {
  * internal curl types.
  */
 namespace detail {
+// Simple base case where O and I are convertable to eachother via static_cast
 template<typename O, typename I>
 struct translate_base
 {
@@ -23,6 +24,7 @@ struct translate_base
 	}
 };
 
+// specialization for std::string
 template<>
 struct translate_base<std::string, const char*>
 {
@@ -39,6 +41,7 @@ struct translate_base<std::string, const char*>
 	}
 };
 
+// base case where inner and outer are the same.
 template<typename O, typename = void>
 struct translate: public translate_base<O, O> {};
 
@@ -59,6 +62,6 @@ struct translate<T, std::enable_if_t<std::is_enum<T>::value>>
 : translate_base<T, std::underlying_type_t<T>> {};
 } // namespace detail
 } // namespace curl
-#endif // CURLPLUSPLUS_UTIL_HPP
+#endif // CURLPLUSPLUS_TRANSLATE_TYPE_HPP
 
 
