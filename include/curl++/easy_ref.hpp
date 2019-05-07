@@ -38,8 +38,8 @@ struct easy_ref
 	T get(info::info<i, T>) const noexcept
 	{
 		typename info::info<i, T>::inner_t x;
-		curl_easy_setopt(handle, i, &x);
-		return info::info<i, T>::to_outer(x).value;
+		curl_easy_getinfo(handle, i, &x);
+		return info::info<i, T>::to_outer(x);
 	}
 
 	//@{

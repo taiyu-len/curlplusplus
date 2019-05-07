@@ -24,6 +24,7 @@ struct info : private detail::translate<T>
 #define CURL_INFO_TYPE(NAME, TYPE) info<CURLINFO_##NAME, TYPE>
 using url = CURL_INFO_TYPE(EFFECTIVE_URL, std::string);
 using response_code = CURL_INFO_TYPE(RESPONSE_CODE, long); // TODO make response code type
+using content_type = CURL_INFO_TYPE(CONTENT_TYPE, std::string);
 
 #undef CURL_INFO_TYPE
 //@}
