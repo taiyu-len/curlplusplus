@@ -16,7 +16,6 @@ OPTION(header, HEADER);
 OPTION(progress, XFERINFO);
 OPTION(read, READ);
 OPTION(seek, SEEK);
-OPTION(write, WRITE);
 } // namespace
 
 template<typename E>

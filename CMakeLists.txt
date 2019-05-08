@@ -5,19 +5,13 @@ set(IN_SOURCE_BUILD $<EQUAL:${CMAKE_SOURCE_DIR},${CMAKE_CURRENT_SOURCE_DIR}>)
 add_library(curl++ STATIC)
 add_subdirectory(src)
 add_subdirectory(include)
+add_subdirectory(external)
 
 target_compile_features(curl++ PUBLIC cxx_std_14)
-target_compile_options(curl++
-	PUBLIC  $<$<CONFIG:Debug>:-fsanitize=address>
-	PRIVATE $<$<CONFIG:Release>:-O3>
-)
-target_link_options   (curl++ PUBLIC $<$<CONFIG:Debug>:-fsanitize=address>)
 target_compile_options(curl++ PUBLIC -Wall)
-set_target_properties(curl++ PROPERTIES
-	CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
-
 
 target_link_libraries(curl++ PUBLIC curl)
+target_link_libraries(curl++ PUBLIC sanitize_address)
 target_include_directories(curl++ PUBLIC include)
 
 IF(IN_SOURCE_BUILD)
