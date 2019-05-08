@@ -1,9 +1,10 @@
 #ifndef CURLPLUSPLUS_EASY_EVENTS_HPP
 #define CURLPLUSPLUS_EASY_EVENTS_HPP
-#include "curl++/buffer.hpp"
-#include "curl++/easy_ref.hpp"
-#include "curl++/option.hpp"
-#include "curl++/types.hpp"
+#include "curl++/buffer.hpp"    // for buffer
+#include "curl++/easy_ref.hpp"  // for easy_ref
+#include "curl++/types.hpp"     // for off_t infotype
+#include <cstddef>              // for size_t
+#include <curl/curl.h>          // for CURL, CURL_WRITEFUNC_PAUSE
 namespace curl
 {
 /* Kinds of events that can be handled */
@@ -40,6 +41,7 @@ struct easy_events
 	};
 };
 namespace detail { /* event_fn specializations */
+template<typename E> struct event_fn;
 template<> struct event_fn<easy_events::write>
 {
 	template<typename T>
@@ -47,7 +49,7 @@ template<> struct event_fn<easy_events::write>
 	{
 		return static_cast<T*>(x)->handle(easy_events::write{buffer{d, s*t}});
 	}
-	using signature = size_t(char*, size_t, size_t, void*) noexcept;
+	using signature = size_t(char*, size_t, size_t, void*);
 };
 template<> struct event_fn<easy_events::read>
 {
@@ -56,7 +58,7 @@ template<> struct event_fn<easy_events::read>
 	{
 		return static_cast<T*>(x)->handle(easy_events::read{buffer{d, s*t}});
 	}
-	using signature = size_t(char*, size_t, size_t, void*) noexcept;
+	using signature = size_t(char*, size_t, size_t, void*);
 };
 template<> struct event_fn<easy_events::header>
 {
@@ -65,7 +67,7 @@ template<> struct event_fn<easy_events::header>
 	{
 		return static_cast<T*>(x)->handle(easy_events::header{buffer{d, s*t}});
 	}
-	using signature = size_t(char*, size_t, size_t, void*) noexcept;
+	using signature = size_t(char*, size_t, size_t, void*);
 };
 template<> struct event_fn<easy_events::cleanup>
 {
@@ -74,7 +76,7 @@ template<> struct event_fn<easy_events::cleanup>
 	{
 		return static_cast<T*>(x)->handle(easy_events::cleanup{});
 	}
-	using signature = int(void*) noexcept;
+	using signature = int(void*);
 };
 template<> struct event_fn<easy_events::debug>
 {
@@ -84,7 +86,7 @@ template<> struct event_fn<easy_events::debug>
 		return static_cast<T*>(x)->handle(
 			easy_events::debug{buffer{c, s}, e, i});
 	}
-	using signature = int(CURL*, infotype, char*, size_t, void*) noexcept;
+	using signature = int(CURL*, infotype, char*, size_t, void*);
 };
 template<> struct event_fn<easy_events::seek>
 {
@@ -93,7 +95,7 @@ template<> struct event_fn<easy_events::seek>
 	{
 		return static_cast<T*>(x)->handle(easy_events::seek{offset, origin});
 	}
-	using signature = int(void*, off_t, int) noexcept;
+	using signature = int(void*, off_t, int);
 };
 template<> struct event_fn<easy_events::progress>
 {
@@ -102,7 +104,7 @@ template<> struct event_fn<easy_events::progress>
 	{
 		return static_cast<T*>(x)->handle(easy_events::progress{dt, dn, ut, un});
 	}
-	using signature = int(void*, off_t, off_t, off_t, off_t) noexcept;
+	using signature = int(void*, off_t, off_t, off_t, off_t);
 };
 } // option
 } // namespace curl

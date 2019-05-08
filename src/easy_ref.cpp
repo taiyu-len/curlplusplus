@@ -1,5 +1,4 @@
 #include "curl++/easy_ref.hpp"
-#include "private_t.hpp"
 
 namespace curl {
 easy_ref::easy_ref(CURL* handle) noexcept

@@ -1,13 +1,11 @@
 #ifndef CURLPLUSPLUS_EASY_OPT_HPP
 #define CURLPLUSPLUS_EASY_OPT_HPP
-#include "curl++/option.hpp"
-#include "curl++/types.hpp"
-#include <curl/curl.h>
-#include <string>
-#include <utility>
+#include "curl++/option.hpp"  // for option_enum, option_base
+#include <curl/curl.h>        // for CURLOPT*
+#include <string>             // for string
 namespace curl {
 namespace detail { /* easy_option */
-template<CURLoption option, typename T, long value=0>
+template<CURLoption option, typename T, unsigned long value=0>
 struct easy_option : public option_base<CURLoption, option, T>
 {
 	using option_base<CURLoption, option, T>::option_base;
@@ -15,8 +13,8 @@ struct easy_option : public option_base<CURLoption, option, T>
 
 /* Specializatoins for enumerated types */
 #define SPECIALIZE_OPTION_ENUM(NAME) \
-template<long value> \
-struct easy_option<CURLOPT_##NAME, long, value> \
+template<unsigned long value> \
+struct easy_option<CURLOPT_##NAME, unsigned long, value> \
 : public option_enum<CURLoption, CURLOPT_##NAME, value> \
 { using option_enum<CURLoption, CURLOPT_##NAME, value>::option_enum; }
 SPECIALIZE_OPTION_ENUM(NETRC);

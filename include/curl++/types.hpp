@@ -1,8 +1,7 @@
 #ifndef CURLPLUSPLUS_TYPES_HPP
 #define CURLPLUSPLUS_TYPES_HPP
-#include <cstddef>
-#include <curl/curl.h>
-#include <type_traits>
+#include <curl/curl.h>   // for CURLMcode, CURLSHcode, CURLUcode, CURLcode
+#include <curl/system.h> // for curl_off_t
 namespace curl {
 // simple typedefs of curl types
 using infotype = curl_infotype;

@@ -1,9 +1,8 @@
 #ifndef CURLPLUSPLUS_EASY_HANDLE_HPP
 #define CURLPLUSPLUS_EASY_HANDLE_HPP
-#include "curl++/easy_events.hpp"
-#include "curl++/easy_ref.hpp"
-#include "curl++/types.hpp"
-#include <curl/curl.h>
+#include "curl++/easy_events.hpp" // for easy_events
+#include "curl++/option.hpp"      // for handler
+#include "curl++/easy_ref.hpp"    // for_easy_ref, easy_ref::handle
 namespace curl {
 /** Lightweight RAII class for a curl easy handle.
  * Allows all functionality that easy_ref does, and allows setting of

@@ -1,6 +1,6 @@
 #include "curl++/easy_events.hpp"
-#include "private_t.hpp"
-#include <stdexcept>
+#include "curl++/option.hpp" // for handler
+#include "private_t.hpp" // for private_t
 
 namespace curl {
 namespace option { // event handler specializations

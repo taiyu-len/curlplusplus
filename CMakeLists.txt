@@ -13,6 +13,9 @@ target_compile_options(curl++
 )
 target_link_options   (curl++ PUBLIC $<$<CONFIG:Debug>:-fsanitize=address>)
 target_compile_options(curl++ PUBLIC -Wall)
+set_target_properties(curl++ PROPERTIES
+	CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
+
 
 target_link_libraries(curl++ PUBLIC curl)
 target_include_directories(curl++ PUBLIC include)

@@ -26,7 +26,7 @@ struct easy_ref
 	/** Set Easy handle options.
 	 * example: @code easy.setopt(url{"www.example.com"}); @endcode
 	 */
-	template<CURLoption o, typename T, long v>
+	template<CURLoption o, typename T, unsigned long v>
 	code set(detail::easy_option<o, T, v> x) noexcept
 	{
 		return curl_easy_setopt(handle, o, x.value);

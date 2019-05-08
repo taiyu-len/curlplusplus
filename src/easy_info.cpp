@@ -1,4 +1,4 @@
-#include "curl++/easy_opt.hpp"
+#include "curl++/easy_info.hpp"
 namespace curl {
 } // namespace curl
 

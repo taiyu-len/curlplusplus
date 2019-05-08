@@ -1,8 +1,8 @@
 #ifndef CURLPLUSPLUS_EASY_HPP
 #define CURLPLUSPLUS_EASY_HPP
-#include "curl++/easy_handle.hpp"
-#include "curl++/easy_opt.hpp"
-#include <type_traits>
+#include "curl++/easy_handle.hpp" // for easy_handle
+#include "curl++/option.hpp"      // for handler
+#include "curl++/types.hpp"       // for code
 namespace curl {
 /** CRTP easy handle that automatically sets callbacks and data.
  * @param T The parent type.

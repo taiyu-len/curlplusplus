@@ -1,6 +1,7 @@
 #include "curl++/easy_handle.hpp"
-#include "private_t.hpp"
-#include <stdexcept>
+#include "private_t.hpp" // for private_t
+#include <curl/curl.h>   // for curl_easy_cleanup, curl_easy_init, CURLINFO_PRIVATE
+#include <stdexcept>     // for runtime_error
 
 namespace curl {
 easy_handle::easy_handle()
