@@ -1,7 +1,6 @@
 set_property(TARGET curl++ PROPERTY PUBLIC_HEADER
 	curl++/buffer.hpp
 	curl++/detail/extract_function.hpp
-	curl++/detail/translate_type.hpp
 	curl++/easy.hpp
 	curl++/easy_events.hpp
 	curl++/easy_handle.hpp

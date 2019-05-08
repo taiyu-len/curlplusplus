@@ -9,18 +9,22 @@ namespace detail { /* event_fn */
  * example specialization
  * template<> struct event_fn<EVENT> {
  *   template<typename T>
- *   static return_t invoke(void *x, int a) noexcept {
+ *   static int invoke(void *x, int a) noexcept {
  *     return static_cast<T*>(x)->handle(EVENT{a});
  *   }
- *   using signature = decltype(&invoke<void>);
+ *   using signature = int(void*, int);
  * };
  */
 template<typename E>
 struct event_fn;
 } // namespace detail
 namespace detail { /* extract_mem_fn */
-/* Extracts the member function pointer for the event from T.
- * default version returns null
+/** Template for extracting member functions from T for handling event E.
+ * @param E The event being handled.
+ * @param T The type handling the function.
+ * @param _ The parameter used to specialize types that can handle the event.
+ *
+ * default version returns nullptr.
  */
 template<typename E, typename T, typename = void>
 struct extract_mem_fn
@@ -32,10 +36,11 @@ struct extract_mem_fn
 	}
 };
 
+// used to determine if T can handle event E.
 template<typename E, typename T>
 using can_handle = decltype(std::declval<T>().handle(std::declval<E>()), void());
 
-/* Specialized version for when T has a function that handles E
+/** Specialized version for when T has a function that handles E.
  */
 template<typename E, typename T>
 struct extract_mem_fn<E, T, can_handle<E, T>>

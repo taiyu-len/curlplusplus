@@ -13,9 +13,9 @@ struct easy_events
 	struct debug : buffer
 	{
 		debug(buffer b, easy_ref h, infotype i)
-		: buffer{b}, handle{h}, info{i} {}
+		: buffer{b}, handle{h}, type{i} {}
 		easy_ref handle;
-		infotype info;
+		infotype type;
 	};
 	struct header : buffer
 	{

@@ -1,8 +1,8 @@
 #ifndef CURLPLUSPLUS_OPTION_HPP
 #define CURLPLUSPLUS_OPTION_HPP
-#include "curl++/detail/translate_type.hpp"
 #include "curl++/detail/extract_function.hpp"
 #include <curl/curl.h>
+#include <string>
 namespace curl {
 namespace detail { /* option_base, option_enum */
 /** Base template for translating c++ types to curl compatible option types on
@@ -12,20 +12,23 @@ namespace detail { /* option_base, option_enum */
  * @param T The c++ type.
  */
 template<typename O, O option, typename T>
-struct option_base : private translate<T>
+struct option_base
 {
-	using typename translate<T>::outer_t;
-	using typename translate<T>::inner_t;
-	explicit option_base(outer_t x): value(this->to_inner(x)) {};
-	/** restrict constructing option from inner type unless permitted.
-	 * currently only std::string permits creating option type from const
-	 * char*
-	 */
-	template<
-		typename S = T,
-		typename = std::enable_if_t<translate<S>::allow_inner>>
-	explicit option_base(inner_t x): value(x) {};
-	inner_t value;
+	explicit option_base(T x): value(x) {};
+	T value;
+};
+template<typename O, O option>
+struct option_base<O, option, std::string>
+{
+	explicit option_base(std::string const& x): value(x.c_str()) {};
+	explicit option_base(const char *x): value(x) {};
+	const char* value;
+};
+template<typename O, O option>
+struct option_base<O, option, bool>
+{
+	explicit option_base(bool x): value(static_cast<long>(x)) {};
+	long value;
 };
 /** Base class representing curl options with limited number of enum values.
  * @param O the type of option being set
@@ -35,7 +38,7 @@ struct option_base : private translate<T>
 template<typename O, O option, long val>
 struct option_enum
 {
-	long value = val;
+	static constexpr long value = val;
 };
 } // namespace detail
 namespace option { /* Event handler template */

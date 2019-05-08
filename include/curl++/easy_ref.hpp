@@ -36,11 +36,11 @@ struct easy_ref
 	 * example: @code easy.getinfo(url{}); @endcode
 	 */
 	template<CURLINFO i, typename T>
-	T get(info::info<i, T>) const noexcept
+	T get(info::info<i, T> x) const noexcept
 	{
-		typename info::info<i, T>::inner_t x;
-		curl_easy_getinfo(handle, i, &x);
-		return info::info<i, T>::to_outer(x);
+		typename info::info<i, T>::value_type y;
+		curl_easy_getinfo(handle, i, &y);
+		return x(y);
 	}
 protected:
 	CURL* handle;

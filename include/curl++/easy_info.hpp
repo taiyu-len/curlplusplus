@@ -1,7 +1,6 @@
 #ifndef CURLPLUSPLUS_EASY_INFO_HPP
 #define CURLPLUSPLUS_EASY_INFO_HPP
 #include "curl++/types.hpp"
-#include "curl++/detail/translate_type.hpp"
 #include <string>
 #include <utility>
 
@@ -12,12 +11,24 @@ namespace info {
  * @param T the user facing argument type.
  */
 template<CURLINFO o, typename T>
-struct info : private detail::translate<T>
+struct info
 {
-	using typename detail::translate<T>::outer_t;
-	using typename detail::translate<T>::inner_t;
-	using detail::translate<T>::to_outer;
+	using value_type = T;
+	T operator()(T x) { return x; }
 };
+template<CURLINFO o>
+struct info<o, std::string>
+{
+	using value_type = const char*;
+	std::string operator()(const char* x) { return x; }
+};
+template<CURLINFO o>
+struct info<o, bool>
+{
+	using value_type = long;
+	long operator()(bool x) { return static_cast<long>(x); }
+};
+
 
 //@{
 /// Curl info types

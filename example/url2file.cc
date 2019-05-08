@@ -26,8 +26,8 @@ int main(int argc, char *argv[]) try
 		printf("Usage: %s <URL>\n", argv[0]);
 		return 1;
 	}
-	curl::global g;
-	to_file request(argv[1], "page.out");
+	auto g = curl::global{};
+	auto request = to_file{argv[1], "page.out"};
 	return bool(request.perform());
 }
 catch (std::exception const& e)
