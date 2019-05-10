@@ -30,16 +30,6 @@ struct option_base<O, option, bool>
 	explicit option_base(bool x): value(static_cast<long>(x)) {};
 	long value;
 };
-/** Base class representing curl options with limited number of enum values.
- * @param O the type of option being set
- * @param option The option to set.
- * @param val the value of the option
- */
-template<typename O, O option, long val>
-struct option_enum
-{
-	static constexpr long value = val;
-};
 } // namespace detail
 namespace option { /* Event handler template */
 /** Template class that extracts member functoin poitners and data from a type

@@ -26,25 +26,32 @@ struct easy_ref
 	/** Set Easy handle options.
 	 * example: @code easy.setopt(url{"www.example.com"}); @endcode
 	 */
-	template<CURLoption o, typename T, unsigned long v>
-	code set(detail::easy_option<o, T, v> x) noexcept
-	{
-		return curl_easy_setopt(handle, o, x.value);
-	}
+	template<CURLoption o, typename T>
+	auto set(detail::easy_option<o, T>) noexcept -> curl::code;
 
 	/** Get request info.
 	 * example: @code easy.getinfo(url{}); @endcode
 	 */
 	template<CURLINFO i, typename T>
-	T get(info::info<i, T> x) const noexcept
-	{
-		typename info::info<i, T>::value_type y;
-		curl_easy_getinfo(handle, i, &y);
-		return x(y);
-	}
+	auto get(info::info<i, T>) const noexcept -> T;
 protected:
 	CURL* handle;
 };
+
+template<CURLoption o, typename T>
+auto easy_ref::set(detail::easy_option<o, T> x) noexcept -> curl::code
+{
+	return curl_easy_setopt(handle, o, x.value);
+}
+
+template<CURLINFO i, typename T>
+auto easy_ref::get(info::info<i, T> x) const noexcept -> T
+{
+	typename info::info<i, T>::value_type y;
+	curl_easy_getinfo(handle, i, &y);
+	return x(y);
+}
+
 } // namespace curl
 #endif // CURLPLUSPLUS_EASY_REF_HPP
 

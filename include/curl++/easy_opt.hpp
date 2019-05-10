@@ -5,29 +5,27 @@
 #include <string>             // for string
 namespace curl {
 namespace detail { /* easy_option */
-template<CURLoption option, typename T, unsigned long value=0>
+template<CURLoption option, typename T>
 struct easy_option : public option_base<CURLoption, option, T>
 {
 	using option_base<CURLoption, option, T>::option_base;
 };
 
-/* Specializatoins for enumerated types */
-#define SPECIALIZE_OPTION_ENUM(NAME) \
-template<unsigned long value> \
-struct easy_option<CURLOPT_##NAME, unsigned long, value> \
-: public option_enum<CURLoption, CURLOPT_##NAME, value> \
-{ using option_enum<CURLoption, CURLOPT_##NAME, value>::option_enum; }
-SPECIALIZE_OPTION_ENUM(NETRC);
-SPECIALIZE_OPTION_ENUM(HTTPAUTH);
-
-#undef SPECIALIZE_OPTION_ENUM
+/* Enumerated type version */
+template<CURLoption option, unsigned long value>
+struct easy_option_enum : public easy_option<option, unsigned long>
+{
+	easy_option_enum()
+	: easy_option<option, unsigned long>(value)
+	{};
+};
 } // namespace detail
 namespace option { /* curl easy options */
 
 //@{
 /// Curl option types
 #define CURL_OPTION_TYPE(NAME, TYPE) detail::easy_option<CURLOPT_##NAME, TYPE>
-#define CURL_ENUM_TYPE(NAME, VALUE)  detail::easy_option<CURLOPT_##NAME, long, VALUE>
+#define CURL_ENUM_TYPE(NAME, VALUE)  detail::easy_option_enum<CURLOPT_##NAME, VALUE>
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
