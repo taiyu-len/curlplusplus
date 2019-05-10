@@ -17,7 +17,7 @@ struct easy_option_enum : public easy_option<option, unsigned long>
 {
 	easy_option_enum()
 	: easy_option<option, unsigned long>(value)
-	{};
+	{}
 };
 } // namespace detail
 namespace option { /* curl easy options */
@@ -48,7 +48,6 @@ namespace httpauth {
 } // namespace httpauth
 #undef CURL_ENUM_TYPE
 #undef CURL_OPTION_TYPE
-/// Option types for setting events
 //@}
 } // namespace option
 } // namespace curl

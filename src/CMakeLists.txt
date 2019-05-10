@@ -6,6 +6,10 @@ target_sources(curl++ PRIVATE
 	easy_opt.cpp
 	easy_ref.cpp
 	global.cpp
+	multi.cpp
+	multi_events.cpp
+	multi_handle.cpp
+	multi_opt.cpp
 	option.cpp
 	types.cpp
 )

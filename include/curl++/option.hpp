@@ -5,6 +5,7 @@
 #include <string>
 namespace curl {
 namespace detail { /* option_base, option_enum */
+struct bit_flag_option {};
 /** Base template for translating c++ types to curl compatible option types on
  * construction.
  * @param O the type of option being set.
@@ -29,6 +30,22 @@ struct option_base<O, option, bool>
 {
 	explicit option_base(bool x): value(static_cast<long>(x)) {};
 	long value;
+};
+/* version for options that are bitflags */
+template<typename O, O option>
+struct option_base<O, option, bit_flag_option>
+{
+	explicit option_base(unsigned long x): value(x) {};
+	unsigned long value;
+	auto operator|(option_base x) const noexcept -> option_base
+	{
+		return option_base(value | x.value);
+	}
+	auto operator|=(option_base x) noexcept -> option_base&
+	{
+		value |= x.value;
+		return *this;
+	}
 };
 } // namespace detail
 namespace option { /* Event handler template */
