@@ -1,6 +1,5 @@
 #include "curl++/easy_events.hpp"
 #include "curl++/option.hpp" // for handler
-#include "private_t.hpp" // for private_t
 
 namespace curl {
 namespace option { // event handler specializations
@@ -46,21 +45,6 @@ void handler<easy_events::write>::easy(CURL *handle) const noexcept
 		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &nowrite);
 		curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);
 	}
-}
-
-// specialized version for cleaunp
-template<>
-void handler<easy_events::cleanup>::easy(CURL *handle) const noexcept
-{
-	detail::private_t* p;
-	curl_easy_getinfo(handle, CURLINFO_PRIVATE, &p);
-	if (p == nullptr)
-	{
-		p = new detail::private_t();
-		curl_easy_setopt(handle, CURLOPT_PRIVATE, p);
-	}
-	p->fptr = fptr;
-	p->data = data;
 }
 } // namespace option
 } // namespace curl

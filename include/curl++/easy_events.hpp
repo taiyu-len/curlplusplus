@@ -10,7 +10,6 @@ namespace curl
 /* Kinds of events that can be handled */
 struct easy_events
 {
-	struct cleanup {};
 	struct debug : buffer
 	{
 		debug(buffer b, easy_ref h, infotype i)
@@ -68,15 +67,6 @@ template<> struct event_fn<easy_events::header>
 		return static_cast<T*>(x)->handle(easy_events::header{buffer{d, s*t}});
 	}
 	using signature = size_t(char*, size_t, size_t, void*);
-};
-template<> struct event_fn<easy_events::cleanup>
-{
-	template<typename T>
-	static int invoke(void *x) noexcept
-	{
-		return static_cast<T*>(x)->handle(easy_events::cleanup{});
-	}
-	using signature = int(void*);
 };
 template<> struct event_fn<easy_events::debug>
 {

@@ -1,9 +1,9 @@
 #ifndef CURLPLUSPLUS_EASY_REF_HPP
 #define CURLPLUSPLUS_EASY_REF_HPP
-#include "curl++/easy_info.hpp"
-#include "curl++/easy_opt.hpp"
-#include "curl++/types.hpp"
-#include <curl/curl.h>
+#include "curl++/easy_info.hpp" // for easy_info
+#include "curl++/easy_opt.hpp"  // for easy_option
+#include "curl++/types.hpp"     // 
+#include <curl/curl.h>          // for CURL*
 namespace curl {
 /* Lightweight non-owning reference to a curl easy handle.
  * Allows setting options, getting information, and a most operations on an easy
