@@ -3,7 +3,7 @@
 #include <utility> // for exchange
 namespace curl {
 multi_handle::multi_handle()
-: handle(curl_multi_init())
+: multi_ref(curl_multi_init())
 {
 	if (handle == nullptr)
 	{
@@ -11,16 +11,18 @@ multi_handle::multi_handle()
 	}
 }
 multi_handle::multi_handle(multi_handle &&x) noexcept
-: handle(std::exchange(x.handle, nullptr))
+: multi_ref(std::exchange(x.handle, nullptr))
 {
 	// NOOP
 }
+
 multi_handle& multi_handle::operator=(multi_handle &&x) noexcept
 {
 	curl_multi_cleanup(handle);
 	handle = std::exchange(x.handle, nullptr);
 	return *this;
 }
+
 multi_handle::~multi_handle() noexcept
 {
 	curl_multi_cleanup(handle);

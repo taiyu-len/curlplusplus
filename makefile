@@ -1,1 +1,1 @@
-all:; $(MAKE) -Cbuild
+all:; $(MAKE) -Cbuild --no-print-directory

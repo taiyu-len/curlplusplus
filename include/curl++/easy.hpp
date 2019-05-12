@@ -34,12 +34,12 @@ easy<T>::easy() noexcept
 {
 	auto self = static_cast<T*>(this);
 	// set event handlers conditionally.
-	set_handler(option::handler< debug    >(self));
-	set_handler(option::handler< header   >(self));
-	set_handler(option::handler< read     >(self));
-	set_handler(option::handler< seek     >(self));
-	set_handler(option::handler< write    >(self));
-	set_handler(option::handler< progress >(self));
+	set_handler< debug    >(self);
+	set_handler< header   >(self);
+	set_handler< read     >(self);
+	set_handler< seek     >(self);
+	set_handler< write    >(self);
+	set_handler< progress >(self);
 }
 
 } // namespace curl

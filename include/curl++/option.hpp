@@ -65,6 +65,13 @@ namespace option { /* Event handler template */
 template<class E>
 struct handler
 {
+	/** Takes function pointer and data pointer for handler */
+	handler(typename detail::event_fn<E>::signature* fptr, void* x)
+	: fptr(fptr)
+	, data(x)
+	{}
+
+	/** Extrace member function from T to use as handler for event E. */
 	template<typename T>
 	handler(T* x) noexcept
 	: fptr(detail::extract_mem_fn<E, T>::fptr())

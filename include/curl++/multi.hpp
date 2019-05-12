@@ -21,9 +21,9 @@ multi<T>::multi() noexcept
 {
 	auto self = static_cast<T*>(this);
 	// set event handlers conditionally
-	set_handler(option::handler< push   >(self));
-	set_handler(option::handler< timer  >(self));
-	set_handler(option::handler< socket >(self));
+	set_handler< push   >(self);
+	set_handler< timer  >(self);
+	set_handler< socket >(self);
 }
 } // namespace curl
 #endif // CURLPLUSPLUS_MULTI_HPP
