@@ -17,38 +17,54 @@ struct easy_ref
 
 	/** Pause or resume receiving or sending data.
 	 * @param flag whether to pause or resume transfer
+	 * @throws curl::code
+	 * @pre handle != nullptr
 	 * see curl_easy_pause
 	 */
-	auto pause(curl::pause flag) noexcept -> curl::code;
+	void pause(curl::pause flag);
 
-	auto perform() noexcept -> curl::code;
+	/** Perform the request.
+	 * @throws curl::code
+	 * @pre handle != nullptr
+	 */
+	void perform();
 
 	/** Set Easy handle options.
+	 * @param option curl::option::* type
+	 * @throws curl::code
+	 * @pre handle != nullptr
+	 *
 	 * example: @code easy.setopt(url{"www.example.com"}); @endcode
 	 */
 	template<CURLoption o, typename T>
-	auto set(detail::easy_option<o, T>) noexcept -> curl::code;
+	void set(detail::easy_option<o, T>);
 
 	/** Get request info.
+	 * @param option curl::info::* type
+	 * @throws curl::code
+	 * @pre handle != nullptr.
+	 *
 	 * example: @code easy.getinfo(url{}); @endcode
 	 */
 	template<CURLINFO i, typename T>
-	auto get(info::info<i, T>) const noexcept -> T;
+	auto get(info::info<i, T>) const -> T;
 protected:
 	CURL* handle;
 };
 
 template<CURLoption o, typename T>
-auto easy_ref::set(detail::easy_option<o, T> x) noexcept -> curl::code
+void easy_ref::set(detail::easy_option<o, T> x)
 {
-	return curl_easy_setopt(handle, o, x.value);
+	curl::code ec = curl_easy_setopt(handle, o, x.value);
+	if (ec) throw ec;
 }
 
 template<CURLINFO i, typename T>
-auto easy_ref::get(info::info<i, T> x) const noexcept -> T
+auto easy_ref::get(info::info<i, T> x) const -> T
 {
 	typename info::info<i, T>::value_type y;
-	curl_easy_getinfo(handle, i, &y);
+	curl::code ec = curl_easy_getinfo(handle, i, &y);
+	if (ec) throw ec;
 	return x(y);
 }
 

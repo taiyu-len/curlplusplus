@@ -29,6 +29,7 @@ namespace option { /* curl easy options */
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
+using error_buffer    = CURL_OPTION_TYPE(ERRORBUFFER, curl::error_buffer);
 namespace netrc {
 	using optional = CURL_ENUM_TYPE(NETRC, CURL_NETRC_OPTIONAL);
 	using ignored  = CURL_ENUM_TYPE(NETRC, CURL_NETRC_IGNORED);

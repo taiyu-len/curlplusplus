@@ -1,5 +1,11 @@
 #include <curl++/types.hpp>
 namespace curl {
+error_buffer::error_buffer()
+: std::string(CURL_ERROR_SIZE, '\0')
+{
+	// NOOP
+}
+
 const char* code::what() const noexcept
 {
 	return curl_easy_strerror(value);

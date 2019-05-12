@@ -7,12 +7,8 @@ int main() try
 	auto curl = curl::easy_handle();
 	curl.set(o::url("https://example.com"));
 	curl.set(o::follow_location(true));
-	auto r = curl.perform();
-	if (r)
-	{
-		std::cerr << "perform() failed: " << r.what() << '\n';
-	}
-	return bool(r);
+	curl.perform();
+	return 0;
 }
 catch (std::exception const& e)
 {

@@ -1,6 +1,7 @@
 #ifndef CURLPLUSPLUS_OPTION_HPP
 #define CURLPLUSPLUS_OPTION_HPP
 #include "curl++/detail/extract_function.hpp"
+#include "curl++/types.hpp"
 #include <curl/curl.h>
 #include <string>
 namespace curl {
@@ -25,13 +26,14 @@ struct option_base<O, option, std::string>
 	explicit option_base(const char *x): value(x) {};
 	const char* value;
 };
+
 template<typename O, O option>
 struct option_base<O, option, bool>
 {
 	explicit option_base(bool x): value(static_cast<long>(x)) {};
 	long value;
 };
-/* version for options that are bitflags */
+
 template<typename O, O option>
 struct option_base<O, option, bit_flag_option>
 {
@@ -46,6 +48,13 @@ struct option_base<O, option, bit_flag_option>
 		value |= x.value;
 		return *this;
 	}
+};
+
+template<typename O, O option>
+struct option_base<O, option, curl::error_buffer>
+{
+	explicit option_base(curl::error_buffer& x):value(x.data()) {};
+	char* value;
 };
 } // namespace detail
 namespace option { /* Event handler template */
