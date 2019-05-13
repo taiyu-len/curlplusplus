@@ -41,33 +41,21 @@ struct easy_events
 };
 namespace detail { /* event_fn specializations */
 template<typename E> struct event_fn;
-template<> struct event_fn<easy_events::write>
+template<typename E>
+struct fwrite_event
 {
 	template<typename T>
 	static size_t invoke(char *d, size_t s, size_t t, void* x) noexcept
 	{
-		return static_cast<T*>(x)->handle(easy_events::write{buffer{d, s*t}});
+		auto ev = E(buffer{d, s*t});
+		return static_cast<T*>(x)->handle(ev);
 	}
 	using signature = size_t(char*, size_t, size_t, void*);
 };
-template<> struct event_fn<easy_events::read>
-{
-	template<typename T>
-	static size_t invoke(char *d, size_t s, size_t t, void* x) noexcept
-	{
-		return static_cast<T*>(x)->handle(easy_events::read{buffer{d, s*t}});
-	}
-	using signature = size_t(char*, size_t, size_t, void*);
-};
-template<> struct event_fn<easy_events::header>
-{
-	template<typename T>
-	static size_t invoke(char *d, size_t s, size_t t, void* x) noexcept
-	{
-		return static_cast<T*>(x)->handle(easy_events::header{buffer{d, s*t}});
-	}
-	using signature = size_t(char*, size_t, size_t, void*);
-};
+template<> struct event_fn<easy_events::write> : fwrite_event<easy_events::write> {};
+template<> struct event_fn<easy_events::read>  : fwrite_event<easy_events::read> {};
+template<> struct event_fn<easy_events::header>: fwrite_event<easy_events::header> {};
+
 template<> struct event_fn<easy_events::debug>
 {
 	template<typename T>

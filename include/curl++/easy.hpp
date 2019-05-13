@@ -14,6 +14,7 @@ namespace curl {
  * - header   * see CURLOPT_HEADERFUNCTION
  * - progress * see CURLOPT_XFERINFOFUNCTION
  * - read     * see CURLOPT_READFUNCTION
+ * - seek     * see CURLOPT_SEEKFUNCTION
  * - write    * see CURLOPT_WRITEFUNCTION
  *
  * TODO add more handlers for CURLOPT_*FUNCTION's
@@ -23,8 +24,8 @@ struct easy
 : public easy_handle
 {
 	easy() noexcept;
-	void handle(curl::code) const noexcept {};
 private:
+	auto self() noexcept -> T*;
 	using easy_handle::easy_handle;
 	using easy_handle::set_handler;
 };
@@ -32,14 +33,18 @@ private:
 template<class T>
 easy<T>::easy() noexcept
 {
-	auto self = static_cast<T*>(this);
-	// set event handlers conditionally.
-	set_handler< debug    >(self);
-	set_handler< header   >(self);
-	set_handler< read     >(self);
-	set_handler< seek     >(self);
-	set_handler< write    >(self);
-	set_handler< progress >(self);
+	set_handler< debug    >(self());
+	set_handler< header   >(self());
+	set_handler< read     >(self());
+	set_handler< seek     >(self());
+	set_handler< write    >(self());
+	set_handler< progress >(self());
+}
+
+template<typename T>
+auto easy<T>::self() noexcept -> T*
+{
+	return static_cast<T*>(this);
 }
 
 } // namespace curl
