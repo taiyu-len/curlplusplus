@@ -8,10 +8,10 @@
 namespace curl {
 struct multi_events
 {
+	// CURLMopt function events
 	struct push{};
 	struct socket{};
 	struct timer{};
-	// other events for convienence
 };
 namespace detail { /* event_fn specializations */
 template<typename E> struct event_fn;

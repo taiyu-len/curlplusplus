@@ -11,6 +11,11 @@ struct multi
 : public multi_handle
 {
 	multi() noexcept;
+	/** Read all messages and emit multi_ref::message event.
+	 *
+	 * calls handle(message{}) from T (or not)
+	 */
+	void info_read_all() noexcept;
 private:
 	using multi_handle::multi_handle;
 	using multi_handle::set_handler;
@@ -25,5 +30,12 @@ multi<T>::multi() noexcept
 	set_handler< timer  >(self);
 	set_handler< socket >(self);
 }
+
+template<typename T>
+void multi<T>::info_read_all() noexcept
+{
+	// TODO
+}
+
 } // namespace curl
 #endif // CURLPLUSPLUS_MULTI_HPP

@@ -8,81 +8,87 @@
 namespace curl
 {
 /* Kinds of events that can be handled */
-struct easy_events
+struct easy_ref::debug : buffer
 {
-	struct debug : buffer
-	{
-		debug(buffer b, easy_ref h, infotype i)
+	debug(buffer b, easy_ref h, infotype i)
 		: buffer{b}, handle{h}, type{i} {}
-		easy_ref handle;
-		infotype type;
-	};
-	struct header : buffer
-	{
-		explicit header(buffer b) : buffer{b} {}
-	};
-	struct read : buffer
-	{
-		explicit read(buffer b):buffer{b} {}
-	};
-	struct seek
-	{
-		off_t offset; int origin;
-	};
-	struct write : buffer
-	{
-		explicit write(buffer b):buffer{b} {}
-		static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
-	};
-	struct progress
-	{
-		off_t dltotal, dlnow, ultotal, ulnow;
-	};
+	easy_ref handle;
+	infotype type;
 };
+struct easy_ref::header : buffer
+{
+	explicit header(buffer b) : buffer{b} {}
+};
+struct easy_ref::read : buffer
+{
+	explicit read(buffer b):buffer{b} {}
+};
+struct easy_ref::seek
+{
+	off_t offset; int origin;
+};
+struct easy_ref::write : buffer
+{
+	explicit write(buffer b):buffer{b} {}
+	static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
+};
+struct easy_ref::progress
+{
+	off_t dltotal, dlnow, ultotal, ulnow;
+};
+;
 namespace detail { /* event_fn specializations */
 template<typename E> struct event_fn;
-template<typename E>
-struct fwrite_event
+template<typename E> struct fwrite_event
 {
+	template<typename T>
+	using signature = size_t(char*, size_t, size_t, T*);
+
 	template<typename T>
 	static size_t invoke(char *d, size_t s, size_t t, void* x) noexcept
 	{
 		auto ev = E(buffer{d, s*t});
 		return static_cast<T*>(x)->handle(ev);
 	}
-	using signature = size_t(char*, size_t, size_t, void*);
 };
-template<> struct event_fn<easy_events::write> : fwrite_event<easy_events::write> {};
-template<> struct event_fn<easy_events::read>  : fwrite_event<easy_events::read> {};
-template<> struct event_fn<easy_events::header>: fwrite_event<easy_events::header> {};
 
-template<> struct event_fn<easy_events::debug>
+template<> struct event_fn<easy_ref::write> : fwrite_event<easy_ref::write> {};
+template<> struct event_fn<easy_ref::read>  : fwrite_event<easy_ref::read> {};
+template<> struct event_fn<easy_ref::header>: fwrite_event<easy_ref::header> {};
+
+template<> struct event_fn<easy_ref::debug>
 {
+	template<typename T>
+	using signature = int(CURL*, infotype, char*, size_t, T*);
+
 	template<typename T>
 	static int invoke(CURL* e, infotype i, char* c, size_t s, void* x) noexcept
 	{
 		return static_cast<T*>(x)->handle(
-			easy_events::debug{buffer{c, s}, e, i});
+			easy_ref::debug{buffer{c, s}, e, i});
 	}
-	using signature = int(CURL*, infotype, char*, size_t, void*);
 };
-template<> struct event_fn<easy_events::seek>
+template<> struct event_fn<easy_ref::seek>
 {
+	template<typename T>
+	using signature = int(T*, off_t, int);
+
 	template<typename T>
 	static int invoke(void* x, off_t offset, int origin) noexcept
 	{
-		return static_cast<T*>(x)->handle(easy_events::seek{offset, origin});
+		return static_cast<T*>(x)->handle(easy_ref::seek{offset, origin});
 	}
-	using signature = int(void*, off_t, int);
 };
-template<> struct event_fn<easy_events::progress>
+template<> struct event_fn<easy_ref::progress>
 {
+	template<typename T>
+	using signature = int(T*, off_t, off_t, off_t, off_t);
+
 	template<typename T>
 	static int invoke(void* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
 	{
-		return static_cast<T*>(x)->handle(easy_events::progress{dt, dn, ut, un});
+		return static_cast<T*>(x)->handle(easy_ref::progress{dt, dn, ut, un});
 	}
-	using signature = int(void*, off_t, off_t, off_t, off_t);
 };
 } // option
 } // namespace curl

@@ -6,6 +6,11 @@ easy_ref::easy_ref(CURL* handle) noexcept
 	// NOOP
 }
 
+easy_ref::operator bool() const noexcept
+{
+	return handle != nullptr;
+}
+
 void easy_ref::pause(curl::pause flag)
 {
 	auto ec = curl::code(curl_easy_pause(handle, static_cast<long>(flag)));

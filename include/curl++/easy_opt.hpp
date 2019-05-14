@@ -4,20 +4,23 @@
 #include <curl/curl.h>        // for CURLOPT*
 #include <string>             // for string
 namespace curl {
-namespace detail { /* easy_option */
-template<CURLoption option, typename T>
-struct easy_option : public option_base<CURLoption, option, T>
-{
-	using option_base<CURLoption, option, T>::option_base;
-};
 
-/* Enumerated type version */
+namespace detail { /* easy_option */
+
+// used to wrap easy option types
+template<CURLoption option, typename T>
+using easy_option = option_base<CURLoption, option, T>;
+
+// used to construct easy option types with set value.
 template<CURLoption option, unsigned long value>
-struct easy_option_enum : public easy_option<option, unsigned long>
+struct easy_option_enum
+	: public easy_option<option, unsigned long>
 {
 	easy_option_enum()
 	: easy_option<option, unsigned long>(value)
-	{}
+	{
+		// NOOP
+	}
 };
 } // namespace detail
 namespace option { /* curl easy options */
@@ -26,6 +29,8 @@ namespace option { /* curl easy options */
 /// Curl option types
 #define CURL_OPTION_TYPE(NAME, TYPE) detail::easy_option<CURLOPT_##NAME, TYPE>
 #define CURL_ENUM_TYPE(NAME, VALUE)  detail::easy_option_enum<CURLOPT_##NAME, VALUE>
+template<typename T>
+using state           = CURL_OPTION_TYPE(PRIVATE, T*);
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);

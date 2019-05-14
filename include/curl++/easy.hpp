@@ -33,12 +33,12 @@ private:
 template<class T>
 easy<T>::easy() noexcept
 {
-	set_handler< debug    >(self());
-	set_handler< header   >(self());
-	set_handler< read     >(self());
-	set_handler< seek     >(self());
-	set_handler< write    >(self());
-	set_handler< progress >(self());
+	set_handler< debug,    true >(self());
+	set_handler< header,   true >(self());
+	set_handler< read,     true >(self());
+	set_handler< seek,     true >(self());
+	set_handler< write,    true >(self());
+	set_handler< progress, true >(self());
 }
 
 template<typename T>

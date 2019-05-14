@@ -5,8 +5,9 @@
 #include <curl/curl.h>
 #include <string>
 namespace curl {
-namespace detail { /* option_base, option_enum */
+namespace detail { /* bit_flag_option, option_base, option_enum */
 struct bit_flag_option {};
+
 /** Base template for translating c++ types to curl compatible option types on
  * construction.
  * @param O the type of option being set.
@@ -19,6 +20,8 @@ struct option_base
 	explicit option_base(T x): value(x) {};
 	T value;
 };
+
+// Specialization for std::string
 template<typename O, O option>
 struct option_base<O, option, std::string>
 {
@@ -27,6 +30,7 @@ struct option_base<O, option, std::string>
 	const char* value;
 };
 
+// Specialization for bool
 template<typename O, O option>
 struct option_base<O, option, bool>
 {
@@ -34,6 +38,7 @@ struct option_base<O, option, bool>
 	long value;
 };
 
+// Specialization for bitflags
 template<typename O, O option>
 struct option_base<O, option, bit_flag_option>
 {
@@ -50,14 +55,17 @@ struct option_base<O, option, bit_flag_option>
 	}
 };
 
+// Specializatoin for error_buffers
 template<typename O, O option>
 struct option_base<O, option, curl::error_buffer>
 {
 	explicit option_base(curl::error_buffer& x):value(x.data()) {};
 	char* value;
 };
+
 } // namespace detail
-namespace option { /* Event handler template */
+
+namespace option { /* handler template */
 /** Template class that extracts member functoin poitners and data from a type
  * on construction per event.
  * @param E the event being handled.
@@ -65,18 +73,36 @@ namespace option { /* Event handler template */
 template<class E>
 struct handler
 {
-	/** Takes function pointer and data pointer for handler */
-	handler(typename detail::event_fn<E>::signature* fptr, void* x)
-	: fptr(fptr)
-	, data(x)
-	{}
-
-	/** Extrace member function from T to use as handler for event E. */
 	template<typename T>
-	handler(T* x) noexcept
-	: fptr(detail::extract_mem_fn<E, T>::fptr())
+	using signature = typename detail::event_fn<E>::template signature<T>;
+
+	/** Construct handler object from function pointer and data pointer */
+	template<typename T>
+	handler(signature<T>* fptr, T* x)
+	// int(T*) => int(void*)
+	// this works exactly how one would think it does, but im not sure if
+	// its undefined behavior or not. cannot find anything specific
+	// regarding this case.
+	: fptr(reinterpret_cast<signature<void>*>(fptr))
 	, data(static_cast<void*>(x))
-	{ /* NOOP */ }
+	{
+		// NOOP
+	}
+
+	/** Extract member function from T to use as handler for event E.
+	 * @param T the object passed
+	 * @param S whether to emit compiler error if T cannot handle E
+	 */
+	template<bool S, typename T>
+	static auto from(T* x) noexcept -> handler
+	{
+		static_assert(
+			S || detail::can_handle<E, T>::value,
+			"Cannot extract event handler for event E from type T");
+		return handler(
+			detail::extract_mem_fn<E, T>::fptr(),
+			static_cast<void*>(x));
+	}
 
 	// Functions to set funtcion and data pointer for the event E.
 	// specialized in source files.
@@ -84,7 +110,7 @@ struct handler
 	void multi(CURLM *) const noexcept;
 private:
 	// type erased function pointer taking void*
-	typename detail::event_fn<E>::signature* fptr;
+	signature<void>* fptr;
 	// type erased data passed to
 	void* data;
 };

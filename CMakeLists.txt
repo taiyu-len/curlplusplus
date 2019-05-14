@@ -8,12 +8,12 @@ add_subdirectory(include)
 add_subdirectory(external)
 
 target_compile_features(curl++ PUBLIC cxx_std_14)
-target_compile_options(curl++ PUBLIC -Wall)
+target_compile_options(curl++ PUBLIC -Wall -Wextra)
 
 target_link_libraries(curl++ PUBLIC curl)
-target_link_libraries(curl++ PUBLIC sanitize_address)
 target_include_directories(curl++ PUBLIC include)
 
 IF(IN_SOURCE_BUILD)
+target_link_libraries(curl++ PUBLIC sanitize_address)
 add_subdirectory(example)
 ENDIF()

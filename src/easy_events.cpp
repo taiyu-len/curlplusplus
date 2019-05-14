@@ -6,7 +6,7 @@ namespace option { // event handler specializations
 namespace { // gets CURLOPTs per event type
 template<typename E> struct opts;
 #define OPTION(n, N) \
-template<> struct opts<easy_events::n> { \
+template<> struct opts<easy_ref::n> { \
 	static constexpr CURLoption func = CURLOPT_## N ##FUNCTION; \
 	static constexpr CURLoption data = CURLOPT_## N ##DATA; \
 }
@@ -24,11 +24,11 @@ void handler<E>::easy(CURL* handle) const noexcept
 	curl_easy_setopt(handle, opts<E>::data, fptr ? data : nullptr);
 }
 
-template void handler<easy_events::debug>::easy(CURL*) const noexcept;
-template void handler<easy_events::header>::easy(CURL*) const noexcept;
-template void handler<easy_events::read>::easy(CURL*) const noexcept;
-template void handler<easy_events::seek>::easy(CURL*) const noexcept;
-template void handler<easy_events::progress>::easy(CURL*) const noexcept;
+template void handler<easy_ref::debug>::easy(CURL*) const noexcept;
+template void handler<easy_ref::header>::easy(CURL*) const noexcept;
+template void handler<easy_ref::read>::easy(CURL*) const noexcept;
+template void handler<easy_ref::seek>::easy(CURL*) const noexcept;
+template void handler<easy_ref::progress>::easy(CURL*) const noexcept;
 
 // Specialized version of write, to set it to a no-op
 size_t nowrite(void*, size_t x, size_t y, void*) noexcept
@@ -36,7 +36,7 @@ size_t nowrite(void*, size_t x, size_t y, void*) noexcept
 	return x*y;
 }
 template<>
-void handler<easy_events::write>::easy(CURL *handle) const noexcept
+void handler<easy_ref::write>::easy(CURL *handle) const noexcept
 {
 	if (fptr) {
 		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, fptr);
