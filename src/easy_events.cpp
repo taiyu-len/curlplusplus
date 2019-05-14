@@ -31,7 +31,7 @@ template void handler<easy_ref::seek>::easy(CURL*) const noexcept;
 template void handler<easy_ref::progress>::easy(CURL*) const noexcept;
 
 // Specialized version of write, to set it to a no-op
-size_t nowrite(void*, size_t x, size_t y, void*) noexcept
+static size_t nowrite(void*, size_t x, size_t y, void*) noexcept
 {
 	return x*y;
 }

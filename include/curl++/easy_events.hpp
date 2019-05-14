@@ -42,13 +42,20 @@ template<typename E> struct event_fn;
 template<typename E> struct fwrite_event
 {
 	template<typename T>
-	using signature = size_t(char*, size_t, size_t, T*);
+	using signature = size_t(void*, size_t, size_t, T*);
 
 	template<typename T>
-	static size_t invoke(char *d, size_t s, size_t t, void* x) noexcept
+	static size_t invoke(void *d, size_t s, size_t t, void* x) noexcept
 	{
-		auto ev = E(buffer{d, s*t});
+		auto ev = E(buffer{static_cast<char*>(d), s*t});
 		return static_cast<T*>(x)->handle(ev);
+	}
+
+	template<typename T, typename D>
+	static size_t invoke_with_data(void *d, size_t s, size_t t, void* x) noexcept
+	{
+		auto ev = E(buffer{static_cast<char*>(d), s*t});
+		return T::handle(ev, static_cast<D*>(x));
 	}
 };
 
@@ -67,6 +74,13 @@ template<> struct event_fn<easy_ref::debug>
 		return static_cast<T*>(x)->handle(
 			easy_ref::debug{buffer{c, s}, e, i});
 	}
+
+	template<typename T, typename D>
+	static int invoke_with_data(CURL* e, infotype i, char* c, size_t s, void* x) noexcept
+	{
+		auto ev = easy_ref::debug{buffer{c, s}, e, i};
+		return T::handle(ev, static_cast<D*>(x));
+	}
 };
 template<> struct event_fn<easy_ref::seek>
 {
@@ -78,6 +92,13 @@ template<> struct event_fn<easy_ref::seek>
 	{
 		return static_cast<T*>(x)->handle(easy_ref::seek{offset, origin});
 	}
+
+	template<typename T, typename D>
+	static int invoke_with_data(void* x, off_t offset, int origin) noexcept
+	{
+		auto ev = easy_ref::seek{offset, origin};
+		return T::handle(ev, static_cast<D*>(x));
+	}
 };
 template<> struct event_fn<easy_ref::progress>
 {
@@ -88,6 +109,13 @@ template<> struct event_fn<easy_ref::progress>
 	static int invoke(void* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
 	{
 		return static_cast<T*>(x)->handle(easy_ref::progress{dt, dn, ut, un});
+	}
+
+	template<typename T, typename D>
+	static int invoke_with_data(void* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
+	{
+		auto ev = easy_ref::progress{dt, dn, ut, un};
+		return T::handle(ev, static_cast<D*>(x));
 	}
 };
 } // option

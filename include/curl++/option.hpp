@@ -80,9 +80,9 @@ struct handler
 	template<typename T>
 	handler(signature<T>* fptr, T* x)
 	// int(T*) => int(void*)
-	// this works exactly how one would think it does, but im not sure if
-	// its undefined behavior or not. cannot find anything specific
-	// regarding this case.
+	// this works exactly as one would expect, but im not sure if its
+	// undefined behavior or not. cannot find anything specific regarding
+	// this case.
 	: fptr(reinterpret_cast<signature<void>*>(fptr))
 	, data(static_cast<void*>(x))
 	{
@@ -98,9 +98,19 @@ struct handler
 	{
 		static_assert(
 			S || detail::can_handle<E, T>::value,
-			"Cannot extract event handler for event E from type T");
+			"Cannot extract T.handle(E)");
 		return handler(
 			detail::extract_mem_fn<E, T>::fptr(),
+			static_cast<void*>(x));
+	}
+	template<typename T, typename D>
+	static auto from_data(D* x)
+	{
+		static_assert(
+			detail::can_handle_with_data<E, T, D>::value,
+			"Cannot extract T::handle(E, D*)");
+		return handler(
+			detail::extract_static_fn<E, T, D>::fptr(),
 			static_cast<void*>(x));
 	}
 

@@ -83,10 +83,15 @@ struct easy_ref
 	 * example: @code x.set_handler<write>(foo); @endcode
 	 */
 	template<typename E, bool S = false, typename T>
-	void set_handler(T*) noexcept;
+	void set_handler(T *x) noexcept;
 
-	template<typename E>
-	void set_handler(option::handler<E> x) noexcept;
+	/** Set data and event handler
+	 * @param E event to be handled.
+	 * @param T type containing static handle function for event.
+	 * @param D extra data type passed to event handler.
+	 */
+	template<typename E, typename T, typename D>
+	void set_handler(T *x, D *y) noexcept;
 protected:
 	CURL* handle = nullptr;
 };
@@ -113,10 +118,10 @@ void easy_ref::set_handler(T* x) noexcept
 	option::handler<E>::template from<S>(x).easy(handle);
 }
 
-template<typename E>
-void easy_ref::set_handler(option::handler<E> x) noexcept
+template<typename E, typename T, typename D>
+void easy_ref::set_handler(T *, D *y) noexcept
 {
-	x.easy(handle);
+	option::handler<E>::template from_data<T>(y).easy(handle);
 }
 } // namespace curl
 

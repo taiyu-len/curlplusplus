@@ -15,6 +15,10 @@ namespace detail { /* event_fn */
  *   static int invoke(void *x, int a) noexcept {
  *     return static_cast<T*>(x)->handle(EVENT{a});
  *   }
+ *   template<typename T, typename D>
+ *   static int invoke_with_data(void* x, int a) noexcept {
+ *     return T::handle(EVENT{a}, static_cast<D*>(x));
+ *   }
  * };
  * @endcode
  */
@@ -59,6 +63,50 @@ struct extract_mem_fn<E, T, detect_can_handle<E, T>>
 	typename event_fn<E>::template signature<void>* fptr() noexcept
 	{
 		return &event_fn<E>::template invoke<T>;
+	}
+};
+} // namespace detail
+
+namespace detail { /* extract_static_fn */
+/** Template for extracting member functions from T for handling event E with
+ *  data D.
+ * @param E The event being handled.
+ * @param T The type handling the function.
+ * @param D The type passed in as extra parameter
+ * @param _ SFINAE parameter to select specializations.
+ *
+ * default version returns nullptr.
+ */
+template<typename E, typename T, typename D, typename = void>
+struct extract_static_fn
+{
+	static constexpr
+	typename event_fn<E>::template signature<void>* fptr() noexcept
+	{
+		return nullptr;
+	}
+};
+
+// detect whether T::handle(E, D*) is valid
+template<typename E, typename T, typename D>
+using detect_can_handle_with_data
+	= decltype(T::handle(std::declval<E>(), std::declval<D*>()), void());
+
+template<typename E, typename T, typename D, typename = void>
+struct can_handle_with_data : std::false_type {};
+
+template<typename E, typename T, typename D>
+struct can_handle_with_data<E, T, D, detect_can_handle_with_data<E, T, D>>
+: std::true_type {};
+
+/** Specialized version for when T has a function that handles E. */
+template<typename E, typename T, typename D>
+struct extract_static_fn<E, T, D, detect_can_handle_with_data<E, T, D>>
+{
+	static constexpr
+	typename event_fn<E>::template signature<void>* fptr() noexcept
+	{
+		return &event_fn<E>::template invoke_with_data<T, D>;
 	}
 };
 } // namespace detail
