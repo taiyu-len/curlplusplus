@@ -1,6 +1,7 @@
 #ifndef CURLPLUSPLUS_OPTION_HPP
 #define CURLPLUSPLUS_OPTION_HPP
 #include "curl++/detail/extract_function.hpp"
+#include "curl++/detail/is_detected.hpp"
 #include "curl++/types.hpp"
 #include <curl/curl.h>
 #include <string>
@@ -73,44 +74,63 @@ namespace option { /* handler template */
 template<class E>
 struct handler
 {
-	template<typename T>
-	using signature = typename detail::event_fn<E>::template signature<T>;
+	using signature = typename detail::event_info<E>::signature;
 
-	/** Construct handler object from function pointer and data pointer */
+	/** Construct handler object from function pointer and data pointer.
+	 * May require reinterpret casting fptr, not very safe.
+	 */
 	template<typename T>
-	handler(signature<T>* fptr, T* x)
-	// int(T*) => int(void*)
-	// this works exactly as one would expect, but im not sure if its
-	// undefined behavior or not. cannot find anything specific regarding
-	// this case.
-	: fptr(reinterpret_cast<signature<void>*>(fptr))
-	, data(static_cast<void*>(x))
-	{
-		// NOOP
-	}
+	handler(signature* fptr, T x)
+	: fptr(fptr)
+	, data(static_cast<void*>(x)) {}
 
 	/** Extract member function from T to use as handler for event E.
-	 * @param T the object passed
+	 * @param T The type containing handler functions, and datapointer type.
 	 * @param S whether to emit compiler error if T cannot handle E
 	 */
 	template<bool S, typename T>
-	static auto from(T* x) noexcept -> handler
+	static auto from_mem_fn(T* x) noexcept -> handler
 	{
+		using detected = detail::is_detected<detail::detect_mem_fn, E, T>;
 		static_assert(
-			S || detail::can_handle<E, T>::value,
-			"Cannot extract T.handle(E)");
+			S || detected::value,
+			"Cannot extract t.handle(e) member function");
 		return handler(
 			detail::extract_mem_fn<E, T>::fptr(),
 			static_cast<void*>(x));
 	}
-	template<typename T, typename D>
-	static auto from_data(D* x)
+
+	/** Extract static function from T to use as handler for event E.
+	 * @param T The type containing handler functions
+	 * @param S whether to emit compiler error if T cannot handle E
+	 */
+	template<bool S, typename T>
+	static auto from_static_fn() noexcept -> handler
 	{
+		using detected = detail::is_detected<detail::detect_static_fn, E, T>;
 		static_assert(
-			detail::can_handle_with_data<E, T, D>::value,
-			"Cannot extract T::handle(E, D*)");
+			S || detected::value,
+			"Cannot extract t::handle(e) static function");
 		return handler(
-			detail::extract_static_fn<E, T, D>::fptr(),
+			detail::extract_static_fn<E, T>::fptr(),
+			nullptr);
+	}
+
+	/** Extract static function from T to use as handler for event E with
+	 * data D.
+	 * @param T The type containing the handler functions.
+	 * @param D The data pointer type
+	 * @param S whether to emit compiler error if T cannot handle E
+	 */
+	template<bool S, typename T, typename D>
+	static auto from_static_fn(D *x) noexcept -> handler
+	{
+		using detected = detail::is_detected<detail::detect_static_fn_with_data, E, T, D>;
+		static_assert(
+			S || detected::value,
+			"Cannot extract t::handle(e, d) static function");
+		return handler(
+			detail::extract_static_fn_with_data<E, T, D>::fptr(),
 			static_cast<void*>(x));
 	}
 
@@ -120,7 +140,7 @@ struct handler
 	void multi(CURLM *) const noexcept;
 private:
 	// type erased function pointer taking void*
-	signature<void>* fptr;
+	signature* fptr;
 	// type erased data passed to
 	void* data;
 };

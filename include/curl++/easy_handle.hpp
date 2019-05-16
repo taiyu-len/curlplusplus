@@ -1,12 +1,9 @@
 #ifndef CURLPLUSPLUS_EASY_HANDLE_HPP
 #define CURLPLUSPLUS_EASY_HANDLE_HPP
-#include "curl++/option.hpp"      // for handler
 #include "curl++/easy_ref.hpp"    // for_easy_ref, easy_ref::handle
 namespace curl {
-/** Lightweight RAII class for a curl easy handle.
- * Allows all functionality that easy_ref does, and allows setting of
- * event handlers.
- * Makes event types that can be handled visible from easy_handle scope.
+/**
+ * Lightweight RAII class for a curl easy handle.
  */
 struct easy_handle
 	: public easy_ref
@@ -16,12 +13,13 @@ struct easy_handle
 	 */
 	easy_handle();
 
-	/** cleanup handle and associated state. */
+	/** cleanup handle. */
 	~easy_handle() noexcept;
 
 	/** Transfer ownership over handle. */
 	easy_handle(easy_handle &&) noexcept;
 	easy_handle& operator=(easy_handle &&) noexcept;
+
 private:
 	using easy_ref::handle;
 };

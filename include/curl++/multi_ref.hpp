@@ -7,7 +7,7 @@
 namespace curl {
 struct multi_ref
 {
-	multi_ref(CURLM *);
+	multi_ref(CURLM *) noexcept;
 
 	void add_handle(easy_ref);
 	void assign(socket_t, void* data);
@@ -23,7 +23,7 @@ struct multi_ref
 	 * @throws curl::mcode
 	 */
 	template<CURLMoption o, typename T>
-		void set(detail::multi_option<o, T> x);
+	inline void set(detail::multi_option<o, T> x);
 protected:
 	CURLM *handle;
 };
@@ -38,12 +38,10 @@ struct multi_ref::message
 	} data;
 };
 
-
 template<CURLMoption o, typename T>
 void multi_ref::set(detail::multi_option<o, T> x)
 {
-	auto ec = curl::mcode(curl_multi_setopt(handle, o, x.value));
-	if (ec) throw ec;
+	detail::invoke(curl_multi_setopt, handle, o, x.value);
 }
 } // namespace curl
 #endif // CURLPLUSPLUS_MULTI_REF_HPP

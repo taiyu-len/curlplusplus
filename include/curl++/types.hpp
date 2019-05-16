@@ -21,7 +21,7 @@ struct error_buffer : public std::string
 // Curl code types
 struct code : std::exception
 {
-	code(CURLcode value): value(value) {};
+	code(CURLcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept override;
 	CURLcode value = CURLE_OK;
@@ -29,7 +29,7 @@ struct code : std::exception
 
 struct mcode : std::exception
 {
-	mcode(CURLMcode value): value(value) {};
+	mcode(CURLMcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept;
 	CURLMcode value = CURLM_OK;
@@ -37,7 +37,7 @@ struct mcode : std::exception
 
 struct shcode : std::exception
 {
-	shcode(CURLSHcode value): value(value) {};
+	shcode(CURLSHcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept;
 	CURLSHcode value = CURLSHE_OK;
@@ -45,7 +45,7 @@ struct shcode : std::exception
 
 struct ucode : std::exception
 {
-	ucode(CURLUcode value): value(value) {};
+	ucode(CURLUcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept;
 	CURLUcode value = CURLUE_OK;

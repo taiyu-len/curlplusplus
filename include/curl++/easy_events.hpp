@@ -37,85 +37,61 @@ struct easy_ref::progress
 	off_t dltotal, dlnow, ultotal, ulnow;
 };
 ;
-namespace detail { /* event_fn specializations */
-template<typename E> struct event_fn;
+namespace detail { /* event_info specializations */
+template<typename E> struct event_info;
 template<typename E> struct fwrite_event
 {
-	template<typename T>
-	using signature = size_t(void*, size_t, size_t, T*);
-
-	template<typename T>
-	static size_t invoke(void *d, size_t s, size_t t, void* x) noexcept
+	using signature = size_t(void*, size_t, size_t, void*);
+	static E get_event(void *d, size_t s, size_t t, void*) noexcept
 	{
-		auto ev = E(buffer{static_cast<char*>(d), s*t});
-		return static_cast<T*>(x)->handle(ev);
+		return E{buffer{static_cast<char*>(d), s*t}};
 	}
-
-	template<typename T, typename D>
-	static size_t invoke_with_data(void *d, size_t s, size_t t, void* x) noexcept
+	static void* get_dataptr(void *, size_t, size_t, void* x) noexcept
 	{
-		auto ev = E(buffer{static_cast<char*>(d), s*t});
-		return T::handle(ev, static_cast<D*>(x));
+		return x;
 	}
 };
 
-template<> struct event_fn<easy_ref::write> : fwrite_event<easy_ref::write> {};
-template<> struct event_fn<easy_ref::read>  : fwrite_event<easy_ref::read> {};
-template<> struct event_fn<easy_ref::header>: fwrite_event<easy_ref::header> {};
+template<> struct event_info<easy_ref::write> : fwrite_event<easy_ref::write> {};
+template<> struct event_info<easy_ref::read>  : fwrite_event<easy_ref::read> {};
+template<> struct event_info<easy_ref::header>: fwrite_event<easy_ref::header> {};
 
-template<> struct event_fn<easy_ref::debug>
+template<> struct event_info<easy_ref::debug>
 {
-	template<typename T>
-	using signature = int(CURL*, infotype, char*, size_t, T*);
-
-	template<typename T>
-	static int invoke(CURL* e, infotype i, char* c, size_t s, void* x) noexcept
+	using signature = int(CURL*, infotype, char*, size_t, void*);
+	static easy_ref::debug get_event(CURL* e, infotype i, char* c, size_t s, void*) noexcept
 	{
-		return static_cast<T*>(x)->handle(
-			easy_ref::debug{buffer{c, s}, e, i});
+		return easy_ref::debug{buffer{c, s}, e, i};
 	}
-
-	template<typename T, typename D>
-	static int invoke_with_data(CURL* e, infotype i, char* c, size_t s, void* x) noexcept
+	static void* get_dataptr(CURL*, infotype, char*, size_t, void* x) noexcept
 	{
-		auto ev = easy_ref::debug{buffer{c, s}, e, i};
-		return T::handle(ev, static_cast<D*>(x));
+		return x;
 	}
 };
-template<> struct event_fn<easy_ref::seek>
+
+template<> struct event_info<easy_ref::seek>
 {
-	template<typename T>
-	using signature = int(T*, off_t, int);
-
-	template<typename T>
-	static int invoke(void* x, off_t offset, int origin) noexcept
+	using signature = int(void*, off_t, int);
+	static easy_ref::seek get_event(void*, off_t offset, int origin) noexcept
 	{
-		return static_cast<T*>(x)->handle(easy_ref::seek{offset, origin});
+		return easy_ref::seek{offset, origin};
 	}
-
-	template<typename T, typename D>
-	static int invoke_with_data(void* x, off_t offset, int origin) noexcept
+	static void* get_dataptr(void* x, off_t, int) noexcept
 	{
-		auto ev = easy_ref::seek{offset, origin};
-		return T::handle(ev, static_cast<D*>(x));
+		return x;
 	}
 };
-template<> struct event_fn<easy_ref::progress>
+
+template<> struct event_info<easy_ref::progress>
 {
-	template<typename T>
-	using signature = int(T*, off_t, off_t, off_t, off_t);
-
-	template<typename T>
-	static int invoke(void* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
+	using signature = int(void*, off_t, off_t, off_t, off_t);
+	static easy_ref::progress get_event(void*, off_t dt, off_t dn, off_t ut, off_t un) noexcept
 	{
-		return static_cast<T*>(x)->handle(easy_ref::progress{dt, dn, ut, un});
+		return easy_ref::progress{dt, dn, ut, un};
 	}
-
-	template<typename T, typename D>
-	static int invoke_with_data(void* x, off_t dt, off_t dn, off_t ut, off_t un) noexcept
+	static void* get_dataptr(void* x, off_t, off_t, off_t, off_t) noexcept
 	{
-		auto ev = easy_ref::progress{dt, dn, ut, un};
-		return T::handle(ev, static_cast<D*>(x));
+		return x;
 	}
 };
 } // option

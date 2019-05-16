@@ -1,12 +1,14 @@
 #ifndef CURLPLUSPLUS_EASY_REF_HPP
 #define CURLPLUSPLUS_EASY_REF_HPP
+#include "curl++/detail/invoke.hpp"
 #include "curl++/easy_info.hpp"
-#include "curl++/option.hpp"    // for handler
 #include "curl++/easy_opt.hpp"  // for easy_option
+#include "curl++/option.hpp"    // for handler
 #include "curl++/types.hpp"     // for pause
 #include <curl/curl.h>          // for CURL*
 
 namespace curl {
+struct multi_ref;
 /** Lightweight non-owning reference to a curl easy handle.
  * Provides all desired functionality for modifying and querying the underlying
  * curl handle.
@@ -46,7 +48,7 @@ struct easy_ref
 	 * example: @code easy.setopt(o::url{"www.example.com"}); @endcode
 	 */
 	template<CURLoption o, typename T>
-	void set(detail::easy_option<o, T>);
+	inline void set(detail::easy_option<o, T>);
 
 	/** Get request info.
 	 * @param option curl::info::* type
@@ -56,7 +58,7 @@ struct easy_ref
 	 * example: @code auto url = easy.getinfo(i::url{}); @endcode
 	 */
 	template<CURLINFO i, typename T>
-	auto get(info::info<i, T>) const -> T;
+	inline auto get(info::info<i, T>) const -> T;
 
 	// Events that can emitted by CURL
 	struct debug;
@@ -83,45 +85,63 @@ struct easy_ref
 	 * example: @code x.set_handler<write>(foo); @endcode
 	 */
 	template<typename E, bool S = false, typename T>
-	void set_handler(T *x) noexcept;
+	inline void set_handler(T *x) noexcept;
 
 	/** Set data and event handler
 	 * @param E event to be handled.
-	 * @param T type containing static handle function for event.
-	 * @param D extra data type passed to event handler.
+	 * @param T type containing static handle functions for event.
+	 * @pre *this
+	 *
+	 * usage: set_handler<write, T>();
+	 */
+	template<typename E, typename T>
+	inline void set_handler() noexcept;
+
+	/** Set data and event handler
+	 * @param E event to be handled.
+	 * @param T type containing static handle functions for event.
+	 * @param D Data pointer for event
+	 * @pre *this
+	 *
+	 * usage: set_handler<write, T>(d*);
 	 */
 	template<typename E, typename T, typename D>
-	void set_handler(T *x, D *y) noexcept;
+	inline void set_handler(D *) noexcept;
 protected:
+	friend multi_ref;
 	CURL* handle = nullptr;
 };
 
 template<CURLoption o, typename T>
 void easy_ref::set(detail::easy_option<o, T> x)
 {
-	curl::code ec = curl_easy_setopt(handle, o, x.value);
-	if (ec) throw ec;
+	detail::invoke(curl_easy_setopt, handle, o, x.value);
 }
 
 template<CURLINFO i, typename T>
 auto easy_ref::get(info::info<i, T> x) const -> T
 {
 	typename info::info<i, T>::value_type y;
-	curl::code ec = curl_easy_getinfo(handle, i, &y);
-	if (ec) throw ec;
+	detail::invoke(curl_easy_getinfo, handle, i, &y);
 	return x(y);
 }
 
 template<typename E, bool S, typename T>
 void easy_ref::set_handler(T* x) noexcept
 {
-	option::handler<E>::template from<S>(x).easy(handle);
+	option::handler<E>::template from_mem_fn<S>(x).easy(handle);
+}
+
+template<typename E, typename T>
+void easy_ref::set_handler() noexcept
+{
+	option::handler<E>::template from_static_fn<false, T>().easy(handle);
 }
 
 template<typename E, typename T, typename D>
-void easy_ref::set_handler(T *, D *y) noexcept
+void easy_ref::set_handler(D *x) noexcept
 {
-	option::handler<E>::template from_data<T>(y).easy(handle);
+	option::handler<E>::template from_static_fn<false, T>(x).easy(handle);
 }
 } // namespace curl
 

@@ -2,111 +2,134 @@
 #define CURLPLUSPLUS_EXTRACT_FUNCTION_HPP
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 namespace curl {
-namespace detail { /* event_fn */
+namespace detail { /* event_info */
 /** Struct to specialize to obtain function pointer for event and type.
  *
  * example: @code
- * template<> struct event_fn<EVENT> {
- *   template<class T>
- *   using signature = int(T*, int);
- *
- *   template<typename T>
- *   static int invoke(void *x, int a) noexcept {
- *     return static_cast<T*>(x)->handle(EVENT{a});
- *   }
- *   template<typename T, typename D>
- *   static int invoke_with_data(void* x, int a) noexcept {
- *     return T::handle(EVENT{a}, static_cast<D*>(x));
- *   }
+ * template<> struct event_info<EVENT> {
+ *   using signature = int(void*, int);
+ *   static EVENT get_event(void*, int a) noexcept { return EVENT{a}; }
+ *   static void* get_dataptr(void* x, int) noexcept { return x; }
  * };
  * @endcode
  */
 template<typename E>
-struct event_fn;
+struct event_info;
 
 } // namespace detail
 
-namespace detail { /* extract_mem_fn */
-/** Template for extracting member functions from T for handling event E.
- * @param E The event being handled.
- * @param T The type handling the function.
- * @param _ SFINAE parameter to select specializations.
- *
- * default version returns nullptr.
+namespace detail { // invoke_handler
+
+/** Provides static functions to handle events in a variety of methods.
+ * @param E the event being handled.
+ * @param 2 The event signature.
  */
-template<typename E, typename T, typename = void>
-struct extract_mem_fn
+template<typename E, typename = typename event_info<E>::signature>
+struct invoke_handler;
+template<typename E, typename R, typename ...Args>
+
+struct invoke_handler<E, R(Args...)>
+{
+	template<typename T>
+	static auto invoke_mem_fn(Args... args) -> R
+	{
+		using info = event_info<E>;
+		auto state = static_cast<T*>(info::get_dataptr(args...));
+		auto event = info::get_event(args...);
+		return state->handle(event);
+	}
+
+	template<typename T>
+	static auto invoke_static_fn(Args... args) -> R
+	{
+		using info = event_info<E>;
+		auto event = info::get_event(args...);
+		return T::handle(event);
+	}
+
+	template<typename T, typename D>
+	static auto invoke_static_fn_with_data(Args... args) -> R
+	{
+		using info = event_info<E>;
+		auto state = static_cast<D*>(info::get_dataptr(args...));
+		auto event = info::get_event(args...);
+		return T::handle(event, state);
+	}
+};
+
+/*
+ * Extractor defaults
+ */
+
+
+template<typename E>
+struct extract_default
 {
 	static constexpr
-	typename event_fn<E>::template signature<void>* fptr() noexcept
+	typename event_info<E>::signature* fptr() noexcept
 	{
 		return nullptr;
 	}
 };
 
-template<typename E, typename T>
-using detect_can_handle = decltype(std::declval<T>().handle(std::declval<E>()), void());
+template<typename E, typename T, typename = void>
+struct extract_mem_fn : extract_default<E> {};
 
 template<typename E, typename T, typename = void>
-struct can_handle : std::false_type {};
+struct extract_static_fn : extract_default<E> {};
 
-template<typename E, typename T>
-struct can_handle<E, T, detect_can_handle<E, T>>
-: std::true_type {};
+template<typename E, typename T, typename D, typename = void>
+struct extract_static_fn_with_data : extract_default<E> {};
 
-/** Specialized version for when T has a function that handles E. */
-template<typename E, typename T>
-struct extract_mem_fn<E, T, detect_can_handle<E, T>>
-{
-	static constexpr
-	typename event_fn<E>::template signature<void>* fptr() noexcept
-	{
-		return &event_fn<E>::template invoke<T>;
-	}
-};
-} // namespace detail
-
-namespace detail { /* extract_static_fn */
-/** Template for extracting member functions from T for handling event E with
- *  data D.
- * @param E The event being handled.
- * @param T The type handling the function.
- * @param D The type passed in as extra parameter
- * @param _ SFINAE parameter to select specializations.
- *
- * default version returns nullptr.
+/*
+ * Event Handler Detectors
  */
-template<typename E, typename T, typename D, typename = void>
-struct extract_static_fn
+
+// detects t.handle(e);
+template<typename E, typename T>
+using detect_mem_fn = decltype(std::declval<T>().handle(std::declval<E>()), void());
+
+// detects T::handle(e);
+template<typename E, typename T>
+using detect_static_fn = decltype(T::handle(std::declval<E>()), void());
+
+// detects T::handle(e, &d);
+template<typename E, typename T, typename D>
+using detect_static_fn_with_data = decltype(T::handle(std::declval<E>(), std::declval<D*>()), void());
+
+/*
+ * Extractor specializations for detected handles
+ */
+
+template<typename E, typename T>
+struct extract_mem_fn<E, T, detect_mem_fn<E, T>>
 {
 	static constexpr
-	typename event_fn<E>::template signature<void>* fptr() noexcept
+	typename event_info<E>::signature* fptr() noexcept
 	{
-		return nullptr;
+		return &invoke_handler<E>::template invoke_mem_fn<T>;
 	}
 };
 
-// detect whether T::handle(E, D*) is valid
-template<typename E, typename T, typename D>
-using detect_can_handle_with_data
-	= decltype(T::handle(std::declval<E>(), std::declval<D*>()), void());
-
-template<typename E, typename T, typename D, typename = void>
-struct can_handle_with_data : std::false_type {};
-
-template<typename E, typename T, typename D>
-struct can_handle_with_data<E, T, D, detect_can_handle_with_data<E, T, D>>
-: std::true_type {};
-
-/** Specialized version for when T has a function that handles E. */
-template<typename E, typename T, typename D>
-struct extract_static_fn<E, T, D, detect_can_handle_with_data<E, T, D>>
+template<typename E, typename T>
+struct extract_static_fn<E, T, detect_static_fn<E, T>>
 {
 	static constexpr
-	typename event_fn<E>::template signature<void>* fptr() noexcept
+	typename event_info<E>::signature* fptr() noexcept
 	{
-		return &event_fn<E>::template invoke_with_data<T, D>;
+		return &invoke_handler<E>::template invoke_static_fn<T>;
+	}
+};
+
+template<typename E, typename T, typename D>
+struct extract_static_fn_with_data<E, T, D, detect_static_fn_with_data<E, T, D>>
+{
+	static constexpr
+	typename event_info<E>::signature* fptr() noexcept
+	{
+		return &invoke_handler<E>::template invoke_static_fn_with_data<T, D>;
 	}
 };
 } // namespace detail
