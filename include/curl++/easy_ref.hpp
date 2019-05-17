@@ -129,19 +129,25 @@ auto easy_ref::get(info::info<i, T> x) const -> T
 template<typename E, bool S, typename T>
 void easy_ref::set_handler(T* x) noexcept
 {
-	option::handler<E>::template from_mem_fn<S>(x).easy(handle);
+	constexpr auto h = option::handler<E>::template from_mem_fn<T>();
+	static_assert(S || bool(h), "Could not extract `t.handle(e)`");
+	h.easy(handle, x);
 }
 
 template<typename E, typename T>
 void easy_ref::set_handler() noexcept
 {
-	option::handler<E>::template from_static_fn<false, T>().easy(handle);
+	constexpr auto h = option::handler<E>::template from_static_fn<T>();
+	static_assert(bool(h), "Could not extract `T::handle(e)`");
+	h.easy(handle, nullptr);
 }
 
 template<typename E, typename T, typename D>
 void easy_ref::set_handler(D *x) noexcept
 {
-	option::handler<E>::template from_static_fn<false, T>(x).easy(handle);
+	constexpr auto h = option::handler<E>::template from_static_fn<T, D>();
+	static_assert(bool(h), "Could not extract `T::handle(e, d);`");
+	h.easy(handle, x);
 }
 } // namespace curl
 

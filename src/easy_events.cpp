@@ -18,17 +18,17 @@ OPTION(seek, SEEK);
 } // namespace
 
 template<typename E>
-void handler<E>::easy(CURL* handle) const noexcept
+void handler<E>::easy(CURL* handle, void* data) const noexcept
 {
 	curl_easy_setopt(handle, opts<E>::func, fptr);
-	curl_easy_setopt(handle, opts<E>::data, fptr ? data : nullptr);
+	curl_easy_setopt(handle, opts<E>::data, fptr ? data : NULL);
 }
 
-template void handler<easy_ref::debug>::easy(CURL*) const noexcept;
-template void handler<easy_ref::header>::easy(CURL*) const noexcept;
-template void handler<easy_ref::read>::easy(CURL*) const noexcept;
-template void handler<easy_ref::seek>::easy(CURL*) const noexcept;
-template void handler<easy_ref::progress>::easy(CURL*) const noexcept;
+template void handler<easy_ref::debug>::easy(CURL*, void*) const noexcept;
+template void handler<easy_ref::header>::easy(CURL*, void*) const noexcept;
+template void handler<easy_ref::read>::easy(CURL*, void*) const noexcept;
+template void handler<easy_ref::seek>::easy(CURL*, void*) const noexcept;
+template void handler<easy_ref::progress>::easy(CURL*, void*) const noexcept;
 
 // Specialized version of write, to set it to a no-op
 static size_t nowrite(void*, size_t x, size_t y, void*) noexcept
@@ -36,7 +36,7 @@ static size_t nowrite(void*, size_t x, size_t y, void*) noexcept
 	return x*y;
 }
 template<>
-void handler<easy_ref::write>::easy(CURL *handle) const noexcept
+void handler<easy_ref::write>::easy(CURL *handle, void* data) const noexcept
 {
 	if (fptr) {
 		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, fptr);
