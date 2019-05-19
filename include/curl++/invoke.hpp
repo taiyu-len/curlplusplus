@@ -1,8 +1,7 @@
-#ifndef CURLPLUSPLUS_DETAIL_INVOKE_HPP
-#define CURLPLUSPLUS_DETAIL_INVOKE_HPP
+#ifndef CURLPLUSPLUS_INVOKE_HPP
+#define CURLPLUSPLUS_INVOKE_HPP
 #include "curl++/types.hpp"
 namespace curl {
-namespace detail {
 inline auto to_code(CURLcode c)   noexcept -> curl::code   { return c; }
 inline auto to_code(CURLMcode c)  noexcept -> curl::mcode  { return c; }
 inline auto to_code(CURLSHcode c) noexcept -> curl::shcode { return c; }
@@ -21,6 +20,5 @@ void invoke(Fn&& fn, Args&&... args)
 	}
 }
 
-} // namespace detail
 } // namespace curl
-#endif // CURLPLUSPLUS_DETAIL_INVOKE_HPP
+#endif // CURLPLUSPLUS_INVOKE_HPP

@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_EASY_REF_HPP
 #define CURLPLUSPLUS_EASY_REF_HPP
-#include "curl++/detail/invoke.hpp"
+#include "curl++/invoke.hpp"
 #include "curl++/easy_info.hpp"
 #include "curl++/easy_opt.hpp"  // for easy_option
 #include "curl++/option.hpp"    // for handler
@@ -115,14 +115,14 @@ protected:
 template<CURLoption o, typename T>
 void easy_ref::set(detail::easy_option<o, T> x)
 {
-	detail::invoke(curl_easy_setopt, handle, o, x.value);
+	invoke(curl_easy_setopt, handle, o, x.value);
 }
 
 template<CURLINFO i, typename T>
 auto easy_ref::get(info::info<i, T> x) const -> T
 {
 	typename info::info<i, T>::value_type y;
-	detail::invoke(curl_easy_getinfo, handle, i, &y);
+	invoke(curl_easy_getinfo, handle, i, &y);
 	return x(y);
 }
 

@@ -1,5 +1,5 @@
 #include "curl++/easy_ref.hpp"
-#include "curl++/detail/invoke.hpp"
+#include "curl++/invoke.hpp"
 namespace curl {
 easy_ref::easy_ref(CURL* handle) noexcept
 : handle(handle)
@@ -14,12 +14,12 @@ easy_ref::operator bool() const noexcept
 
 void easy_ref::pause(curl::pause flag)
 {
-	detail::invoke(curl_easy_pause, handle, static_cast<long>(flag));
+	invoke(curl_easy_pause, handle, static_cast<long>(flag));
 }
 
 void easy_ref::perform()
 {
-	detail::invoke(curl_easy_perform, handle);
+	invoke(curl_easy_perform, handle);
 }
 } // namespace curl
 

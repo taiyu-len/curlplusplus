@@ -41,7 +41,7 @@ struct multi_ref::message
 template<CURLMoption o, typename T>
 void multi_ref::set(detail::multi_option<o, T> x)
 {
-	detail::invoke(curl_multi_setopt, handle, o, x.value);
+	invoke(curl_multi_setopt, handle, o, x.value);
 }
 } // namespace curl
 #endif // CURLPLUSPLUS_MULTI_REF_HPP
