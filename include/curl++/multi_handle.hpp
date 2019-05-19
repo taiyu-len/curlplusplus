@@ -1,6 +1,5 @@
 #ifndef CURLPLUSPLUS_MULTI_HANDLE_HPP
 #define CURLPLUSPLUS_MULTI_HANDLE_HPP
-#include "curl++/easy_ref.hpp"     // for easy_ref
 #include "curl++/multi_events.hpp" // for multi_events
 #include "curl++/multi_opt.hpp"    // for multi_option
 #include "curl++/multi_ref.hpp"    // for multi_ref

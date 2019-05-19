@@ -1,7 +1,6 @@
 #ifndef CURLPLUSPLUS_MULTI_EVENTS_HPP
 #define CURLPLUSPLUS_MULTI_EVENTS_HPP
 #include "curl++/buffer.hpp"    // for buffer
-#include "curl++/easy_ref.hpp"  // for easy_ref
 #include "curl++/types.hpp"
 #include <cstddef>
 #include <curl/curl.h>

@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_MULTI_REF_HPP
 #define CURLPLUSPLUS_MULTI_REF_HPP
-#include "curl++/easy_ref.hpp"
+#include "curl++/easy.hpp"
 #include "curl++/multi_opt.hpp"
 #include "curl++/types.hpp"     // for mcode
 #include <curl/curl.h>          // for CURLM*
