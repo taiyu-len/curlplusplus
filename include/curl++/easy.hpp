@@ -20,7 +20,7 @@ public:
 	easy_ref(CURL *handle) noexcept;
 
 	/// @return handle != nullptr
-	explicit operator bool() const noexcept;
+	explicit operator bool() const noexcept { return handle; }
 
 	/** See curl_easy_pause.
 	 * @throws curl::code
@@ -227,10 +227,7 @@ struct easy : public easy_handle
 		set_handler< progress, true >(self());
 	}
 private:
-	auto self() noexcept -> T*
-	{
-		return static_cast<T*>(this);
-	}
+	auto self() noexcept -> T* { return static_cast<T*>(this); }
 	using easy_handle::easy_handle;
 	using easy_handle::set_handler;
 };

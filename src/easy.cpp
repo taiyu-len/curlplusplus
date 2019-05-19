@@ -10,11 +10,6 @@ namespace curl { // easy_ref
 easy_ref::easy_ref(CURL* handle) noexcept : handle(handle)
 {}
 
-easy_ref::operator bool() const noexcept
-{
-	return handle != nullptr;
-}
-
 void easy_ref::pause(curl::pause flag)
 {
 	invoke(curl_easy_pause, handle, static_cast<long>(flag));

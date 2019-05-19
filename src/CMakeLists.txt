@@ -4,10 +4,7 @@ target_sources(curl++ PRIVATE
 	easy_opt.cpp
 	global.cpp
 	multi.cpp
-	multi_events.cpp
-	multi_handle.cpp
 	multi_opt.cpp
-	multi_ref.cpp
 	option.cpp
 	types.cpp
 )

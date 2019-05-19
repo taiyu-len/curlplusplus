@@ -15,19 +15,20 @@ struct info
 	using value_type = T;
 	T operator()(T x) { return x; }
 };
+
 template<CURLINFO o>
 struct info<o, std::string>
 {
 	using value_type = const char*;
 	std::string operator()(const char* x) { return x; }
 };
+
 template<CURLINFO o>
 struct info<o, bool>
 {
 	using value_type = long;
 	long operator()(bool x) { return static_cast<long>(x); }
 };
-
 
 //@{
 /// Curl info types
