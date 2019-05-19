@@ -4,21 +4,6 @@
 #include <type_traits>
 #include <utility>
 namespace curl {
-namespace detail { /* event_info */
-/** Struct to specialize to obtain function pointer for event and type.
- *
- * example: @code
- * template<> struct event_info<EVENT> {
- *   using signature = int(void*, int);
- *   static EVENT get_event(void*, int a) noexcept { return EVENT{a}; }
- *   static void* get_dataptr(void* x, int) noexcept { return x; }
- * };
- * @endcode
- */
-template<typename E>
-struct event_info;
-
-} // namespace detail
 
 namespace detail { // invoke_handler
 
@@ -26,7 +11,7 @@ namespace detail { // invoke_handler
  * @param E the event being handled.
  * @param 2 The event signature.
  */
-template<typename E, typename = typename event_info<E>::signature>
+template<typename E, typename = typename E::signature>
 struct invoke_handler;
 template<typename E, typename R, typename ...Args>
 
@@ -35,26 +20,23 @@ struct invoke_handler<E, R(Args...)>
 	template<typename T>
 	static auto invoke_mem_fn(Args... args) -> R
 	{
-		using info = event_info<E>;
-		auto state = static_cast<T*>(info::get_dataptr(args...));
-		auto event = info::get_event(args...);
+		auto event = E(args...);
+		auto state = static_cast<T*>(E::dataptr(args...));
 		return state->handle(event);
 	}
 
 	template<typename T>
 	static auto invoke_static_fn(Args... args) -> R
 	{
-		using info = event_info<E>;
-		auto event = info::get_event(args...);
+		auto event = E(args...);
 		return T::handle(event);
 	}
 
 	template<typename T, typename D>
 	static auto invoke_static_fn_with_data(Args... args) -> R
 	{
-		using info = event_info<E>;
-		auto state = static_cast<D*>(info::get_dataptr(args...));
-		auto event = info::get_event(args...);
+		auto event = E(args...);
+		auto state = static_cast<D*>(E::dataptr(args...));
 		return T::handle(event, state);
 	}
 };
@@ -68,7 +50,7 @@ template<typename E>
 struct extract_default
 {
 	static constexpr
-	typename event_info<E>::signature* fptr() noexcept
+	typename E::signature* fptr() noexcept
 	{
 		return nullptr;
 	}
@@ -107,7 +89,7 @@ template<typename E, typename T>
 struct extract_mem_fn<E, T, detect_mem_fn<E, T>>
 {
 	static constexpr
-	typename event_info<E>::signature* fptr() noexcept
+	typename E::signature* fptr() noexcept
 	{
 		return &invoke_handler<E>::template invoke_mem_fn<T>;
 	}
@@ -117,7 +99,7 @@ template<typename E, typename T>
 struct extract_static_fn<E, T, detect_static_fn<E, T>>
 {
 	static constexpr
-	typename event_info<E>::signature* fptr() noexcept
+	typename E::signature* fptr() noexcept
 	{
 		return &invoke_handler<E>::template invoke_static_fn<T>;
 	}
@@ -127,7 +109,7 @@ template<typename E, typename T, typename D>
 struct extract_static_fn_with_data<E, T, D, detect_static_fn_with_data<E, T, D>>
 {
 	static constexpr
-	typename event_info<E>::signature* fptr() noexcept
+	typename E::signature* fptr() noexcept
 	{
 		return &invoke_handler<E>::template invoke_static_fn_with_data<T, D>;
 	}

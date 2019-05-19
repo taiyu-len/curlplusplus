@@ -74,7 +74,7 @@ namespace option { /* handler template */
 template<class E>
 struct handler
 {
-	using signature = typename detail::event_info<E>::signature;
+	using signature = typename E::signature;
 
 	/** Extract member function from T to use as handler for event E.
 	 * @param T The type containing handler functions, and datapointer type.
