@@ -14,3 +14,6 @@ target_compile_features(debug PRIVATE cxx_std_17)
 
 add_executable(use_test use_test.cpp)
 target_link_libraries(use_test PRIVATE curl++)
+
+add_executable(time time.cc)
+target_link_libraries(time PRIVATE curl++)

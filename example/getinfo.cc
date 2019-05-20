@@ -8,7 +8,7 @@ int main(void) try
 	auto curl = curl::easy_handle();
 	curl.set(o::url("https://www.example.com"));
 	curl.perform();
-	auto ct = curl.get(i::content_type());
+	auto ct = curl.get(i::content_type);
 	if (! ct.empty())
 	{
 		std::cout << "We recieved Content-Type: " << ct << '\n';
