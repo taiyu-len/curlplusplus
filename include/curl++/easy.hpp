@@ -81,7 +81,9 @@ public:
 	template<typename Event, bool NoError = false, typename T>
 	inline void set_handler(T *x) noexcept
 	{
-		constexpr auto* fptr = extract_mem_fn<Event, T>::fptr();
+		// required to avoid a buggy gcc warning
+		using fptr_t = typename Event::signature*;
+		constexpr fptr_t fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "Could not find `x->handle(e)`");
 		Event::setopt(handle, fptr, x);
 	}
@@ -94,7 +96,8 @@ public:
 	template<typename Event, typename T>
 	inline void set_handler() noexcept
 	{
-		constexpr auto* fptr = extract_static_fn<Event, T>::fptr();
+		using fptr_t = typename Event::signature*;
+		constexpr fptr_t fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(fptr, "Could not find `T::handle(e)`");
 		Event::setopt(handle, fptr, nullptr);
 	}
@@ -109,7 +112,8 @@ public:
 	template<typename Event, typename T, typename D>
 	inline void set_handler(D *x) noexcept
 	{
-		constexpr auto* fptr = extract_static_fn_with_data<Event, T, D>::fptr();
+		using fptr_t = typename Event::signature*;
+		constexpr fptr_t fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "Could not find `T::handle(e, d)`");
 		Event::setopt(handle, fptr, x);
 	}
