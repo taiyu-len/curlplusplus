@@ -19,7 +19,7 @@ int main() try
 {
 	namespace o = curl::option;
 	namespace i = curl::info;
-	using ev = curl::easy_ref;
+	namespace ev = curl::easy_events;
 	auto request = curl::easy_handle();
 
 	request.set(o::url("https://www.example.com"));

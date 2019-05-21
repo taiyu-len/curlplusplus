@@ -23,8 +23,6 @@ void easy_ref::perform()
 } // namespace curl
 namespace curl { // curl_ref::events
 
-namespace option { // event handler specializations
-
 namespace { // gets CURLOPTs per event type
 template<typename E> struct opts;
 #define OPTION(n, N) \
@@ -40,40 +38,31 @@ OPTION(seek, SEEK);
 #undef OPTION
 } // namespace
 
-// Default definition for setting callbacks.
-template<typename E>
-void handler<E>::easy(CURL* handle, void* data) const noexcept
-{
-	curl_easy_setopt(handle, opts<E>::func, fptr);
-	curl_easy_setopt(handle, opts<E>::data, fptr ? data : NULL);
+#define DEFINE_DEFAULT_SETOPT(EVENT) \
+void easy_ref::EVENT::setopt(CURL* handle, signature* fptr, void* data) noexcept \
+{ \
+	curl_easy_setopt(handle, opts<EVENT>::func, fptr); \
+	curl_easy_setopt(handle, opts<EVENT>::data, fptr ? data : NULL); \
 }
+DEFINE_DEFAULT_SETOPT(debug);
+DEFINE_DEFAULT_SETOPT(header);
+DEFINE_DEFAULT_SETOPT(progress);
+DEFINE_DEFAULT_SETOPT(read);
+DEFINE_DEFAULT_SETOPT(seek);
+#undef DEFINE_DEFAULT_SETOPT
 
-// explicit instantiation for these events.
-template void handler< easy_ref::debug    >::easy(CURL*, void*) const noexcept;
-template void handler< easy_ref::header   >::easy(CURL*, void*) const noexcept;
-template void handler< easy_ref::read     >::easy(CURL*, void*) const noexcept;
-template void handler< easy_ref::seek     >::easy(CURL*, void*) const noexcept;
-template void handler< easy_ref::progress >::easy(CURL*, void*) const noexcept;
 
 // Specialized version of write, to set it to a no-op
-static size_t nowrite(void*, size_t x, size_t y, void*) noexcept
+static size_t nowrite(char*, size_t x, size_t y, void*) noexcept
 {
 	return x*y;
 }
 
-template<>
-void handler<easy_ref::write>::easy(CURL *handle, void* data) const noexcept
+void easy_ref::write::setopt(CURL* handle, signature* fptr, void* data) noexcept
 {
-	if (fptr) {
-		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, fptr);
-		curl_easy_setopt(handle, CURLOPT_WRITEDATA, data);
-	} else {
-		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &nowrite);
-		curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);
-	}
+	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, fptr ? fptr : &nowrite);
+	curl_easy_setopt(handle, CURLOPT_WRITEDATA,     fptr ? data : NULL);
 }
-
-} // namespace option
 
 } // namespace curl
 namespace curl { // easy_handle

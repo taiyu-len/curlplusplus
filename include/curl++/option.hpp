@@ -1,12 +1,12 @@
 #ifndef CURLPLUSPLUS_OPTION_HPP
 #define CURLPLUSPLUS_OPTION_HPP
-#include "curl++/detail/extract_function.hpp"
-#include "curl++/detail/is_detected.hpp"
 #include "curl++/types.hpp"
 #include <curl/curl.h>
 #include <string>
 namespace curl {
-namespace detail { /* bit_flag_option, option_base, option_enum */
+namespace option {
+namespace detail { /* option_base specializations */
+
 struct bit_flag_option {};
 
 /** Base template for translating c++ types to curl compatible option types on
@@ -65,66 +65,6 @@ struct option_base<O, option, curl::error_buffer>
 };
 
 } // namespace detail
-
-namespace option { /* handler template */
-/** Template class that extracts member functoin poitners and data from a type
- * on construction per event.
- * @param E the event being handled.
- */
-template<class E>
-struct handler
-{
-	using signature = typename E::signature;
-
-	/** Extract member function from T to use as handler for event E.
-	 * @param T The type containing handler functions, and datapointer type.
-	 */
-	template<typename T>
-	static constexpr auto from_mem_fn() noexcept -> handler
-	{
-		return detail::extract_mem_fn<E, T>::fptr();
-	}
-
-	/** Extract static function from T to use as handler for event E.
-	 * @param T The type containing handler functions
-	 */
-	template<typename T>
-	static constexpr auto from_static_fn() noexcept -> handler
-	{
-		return detail::extract_static_fn<E, T>::fptr();
-	}
-
-	/** Extract static function from T to use as handler for event E with
-	 * data D.
-	 * @param T The type containing the handler functions.
-	 * @param D The data pointer type
-	 */
-	template<typename T, typename D>
-	static constexpr auto from_static_fn() noexcept -> handler
-	{
-		return detail::extract_static_fn_with_data<E, T, D>::fptr();
-	}
-
-	// Checks if fptr is vlid
-	constexpr explicit operator bool() const noexcept
-	{
-		return fptr != nullptr;
-	}
-
-	/** Functions which set the appropriate options for the given handle.
-	 * Specialized in source files where events are defined
-	 */
-	void easy(CURL *, void*) const noexcept;
-	void multi(CURLM *, void*) const noexcept;
-private:
-	/** Construct handler object from function pointer and data pointer. */
-	constexpr handler(signature* fptr) noexcept
-	: fptr(fptr)
-	{}
-
-	// passed to CURLOPT_****FUNCTION
-	signature* fptr;
-};
 } // namespace option
 } // namespace curl
 #endif // CURLPLUSPLUS_OPTION_HPP

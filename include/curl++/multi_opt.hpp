@@ -3,6 +3,7 @@
 #include "curl++/option.hpp"  // for option_enum, option_base
 #include <curl/curl.h>        // for CURLMOPT*
 namespace curl {
+namespace option { /* Curl multi options */
 namespace detail { /* multi_option */
 template<CURLMoption option, typename T>
 struct multi_option : public option_base<CURLMoption, option, T>
@@ -19,7 +20,7 @@ struct multi_option_enum : public multi_option<option, T>
 	{}
 };
 } // namespace detail
-namespace option { /* Curl multi options */
+
 /// Curl option types
 #define CURL_OPTION_TYPE(NAME, TYPE) detail::multi_option<CURLMOPT_##NAME, TYPE>
 #define CURL_ENUM_TYPE(NAME, VALUE)  detail::multi_option_enum<CURLMOPT_##NAME, VALUE>

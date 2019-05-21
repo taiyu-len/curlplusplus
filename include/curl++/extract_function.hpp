@@ -13,8 +13,8 @@ namespace detail { // invoke_handler
  */
 template<typename E, typename = typename E::signature>
 struct invoke_handler;
-template<typename E, typename R, typename ...Args>
 
+template<typename E, typename R, typename ...Args>
 struct invoke_handler<E, R(Args...)>
 {
 	template<typename T>
@@ -41,34 +41,6 @@ struct invoke_handler<E, R(Args...)>
 	}
 };
 
-/*
- * Extractor defaults
- */
-
-
-template<typename E>
-struct extract_default
-{
-	static constexpr
-	typename E::signature* fptr() noexcept
-	{
-		return nullptr;
-	}
-};
-
-template<typename E, typename T, typename = void>
-struct extract_mem_fn : extract_default<E> {};
-
-template<typename E, typename T, typename = void>
-struct extract_static_fn : extract_default<E> {};
-
-template<typename E, typename T, typename D, typename = void>
-struct extract_static_fn_with_data : extract_default<E> {};
-
-/*
- * Event Handler Detectors
- */
-
 // detects t.handle(e);
 template<typename E, typename T>
 using detect_mem_fn = decltype(std::declval<T>().handle(std::declval<E>()), void());
@@ -81,40 +53,63 @@ using detect_static_fn = decltype(T::handle(std::declval<E>()), void());
 template<typename E, typename T, typename D>
 using detect_static_fn_with_data = decltype(T::handle(std::declval<E>(), std::declval<D*>()), void());
 
-/*
- * Extractor specializations for detected handles
- */
+// default extractor
 
-template<typename E, typename T>
-struct extract_mem_fn<E, T, detect_mem_fn<E, T>>
+template<typename E>
+struct extract_default
 {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
-		return &invoke_handler<E>::template invoke_mem_fn<T>;
+		return nullptr;
+	}
+};
+
+} // namespace detail
+
+template<typename E, typename T, typename = void>
+struct extract_mem_fn : detail::extract_default<E> {};
+
+template<typename E, typename T, typename = void>
+struct extract_static_fn : detail::extract_default<E> {};
+
+template<typename E, typename T, typename D, typename = void>
+struct extract_static_fn_with_data : detail::extract_default<E> {};
+
+//
+// specializations
+//
+
+template<typename E, typename T>
+struct extract_mem_fn<E, T, detail::detect_mem_fn<E, T>>
+{
+	static constexpr
+	typename E::signature* fptr() noexcept
+	{
+		return &detail::invoke_handler<E>::template invoke_mem_fn<T>;
 	}
 };
 
 template<typename E, typename T>
-struct extract_static_fn<E, T, detect_static_fn<E, T>>
+struct extract_static_fn<E, T, detail::detect_static_fn<E, T>>
 {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
-		return &invoke_handler<E>::template invoke_static_fn<T>;
+		return &detail::invoke_handler<E>::template invoke_static_fn<T>;
 	}
 };
 
 template<typename E, typename T, typename D>
-struct extract_static_fn_with_data<E, T, D, detect_static_fn_with_data<E, T, D>>
+struct extract_static_fn_with_data<E, T, D, detail::detect_static_fn_with_data<E, T, D>>
 {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
-		return &invoke_handler<E>::template invoke_static_fn_with_data<T, D>;
+		return &detail::invoke_handler<E>::template invoke_static_fn_with_data<T, D>;
 	}
 };
-} // namespace detail
+
 } // namespace curl
 #endif // CURLPLUSPLUS_EXTRACT_FUNCTION_HPP
 

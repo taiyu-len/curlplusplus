@@ -35,8 +35,8 @@ struct info<o, bool>
 template<CURLINFO o, class Rep, class Period>
 struct info<o, std::chrono::duration<Rep, Period>>
 {
-	using value_type = off_t;
-	std::chrono::duration<Rep, Period> operator()(off_t x) const noexcept
+	using value_type = curl_off_t;
+	std::chrono::duration<Rep, Period> operator()(curl_off_t x) const noexcept
 	{
 		return std::chrono::duration<Rep, Period>{x};
 	}

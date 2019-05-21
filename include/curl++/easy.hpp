@@ -2,6 +2,7 @@
 #define CURLPLUSPLUS_EASY_HPP
 #include "curl++/buffer.hpp"
 #include "curl++/easy_info.hpp"
+#include "curl++/extract_function.hpp"
 #include "curl++/easy_opt.hpp"
 #include "curl++/invoke.hpp"
 #include "curl++/option.hpp" // for handler
@@ -38,10 +39,10 @@ public:
 	 * @throws curl::code
 	 * @pre *this
 	 *
-	 * example: @code easy.setopt(o::url{"www.example.com"}); @endcode
+	 * example: @code easy.set(o::url{"www.example.com"}); @endcode
 	 */
 	template<CURLoption o, typename T>
-	void set(detail::easy_option<o, T> x)
+	void set(option::detail::easy_option<o, T> x)
 	{
 		invoke(curl_easy_setopt, handle, o, x.value);
 	}
@@ -50,7 +51,7 @@ public:
 	 * @throws curl::code
 	 * @pre *this
 	 *
-	 * example: @code auto url = easy.getinfo(i::url{}); @endcode
+	 * example: @code auto url = easy.getinfo(i::url); @endcode
 	 */
 	template<CURLINFO i, typename T>
 	inline auto get(info::info<i, T> x) const -> T
@@ -80,9 +81,9 @@ public:
 	template<typename Event, bool NoError = false, typename T>
 	inline void set_handler(T *x) noexcept
 	{
-		constexpr auto fptr = option::handler<Event>::template from_mem_fn<T>();
+		constexpr auto* fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "Could not find `x->handle(e)`");
-		fptr.easy(handle, x);
+		Event::setopt(handle, fptr, x);
 	}
 
 	/** Set callback from static member function, and dataptr to nullptr.
@@ -93,9 +94,9 @@ public:
 	template<typename Event, typename T>
 	inline void set_handler() noexcept
 	{
-		constexpr auto fptr = option::handler<Event>::template from_static_fn<T>();
+		constexpr auto* fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(fptr, "Could not find `T::handle(e)`");
-		fptr.easy(handle, nullptr);
+		Event::setopt(handle, fptr, nullptr);
 	}
 
 	/** Set callback from static member function, and dataptr to param.
@@ -108,14 +109,23 @@ public:
 	template<typename Event, typename T, typename D>
 	inline void set_handler(D *x) noexcept
 	{
-		constexpr auto fptr = option::handler<Event>::template from_static_fn<T, D>();
+		constexpr auto* fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "Could not find `T::handle(e, d)`");
-		fptr.easy(handle, x);
+		Event::setopt(handle, fptr, x);
 	}
 };
 
 } // namespace curl
 namespace curl { // easy_ref::events
+namespace easy_events {
+using debug    = easy_ref::debug;
+using header   = easy_ref::header;
+using read     = easy_ref::read;
+using seek     = easy_ref::seek;
+using write    = easy_ref::write;
+using progress = easy_ref::progress;
+}
+
 struct fwrite_event : buffer
 {
 	using signature = size_t(char*, size_t, size_t, void*);
@@ -131,17 +141,20 @@ struct fwrite_event : buffer
 struct easy_ref::header : fwrite_event
 {
 	using fwrite_event::fwrite_event;
+	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
 struct easy_ref::read : fwrite_event
 {
 	using fwrite_event::fwrite_event;
+	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
 struct easy_ref::write : fwrite_event
 {
 	using fwrite_event::fwrite_event;
 	static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
+	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
 struct easy_ref::debug : buffer
@@ -151,9 +164,12 @@ struct easy_ref::debug : buffer
 	debug(CURL* e, infotype i, char* c, size_t s, void*) noexcept
 	: buffer{c, s} , handle(e) , type(i) {}
 
-	static void* dataptr(CURL*, infotype, char*, size_t, void* x) noexcept {
+	static void* dataptr(CURL*, infotype, char*, size_t, void* x) noexcept
+	{
 		return x;
 	}
+
+	static void setopt(CURL*, signature*, void*) noexcept;
 
 	easy_ref handle;
 	infotype type;
@@ -161,33 +177,37 @@ struct easy_ref::debug : buffer
 
 struct easy_ref::seek
 {
-	using signature = int(void*, off_t, int);
+	using signature = int(void*, curl_off_t, int);
 
-	seek(void*, off_t offset, int origin) noexcept
+	seek(void*, curl_off_t offset, int origin) noexcept
 	: offset(offset), origin(origin) {}
 
-	static void* dataptr(void* x, off_t, int) noexcept
+	static void* dataptr(void* x, curl_off_t, int) noexcept
 	{
 		return x;
 	}
 
-	off_t offset;
+	static void setopt(CURL*, signature*, void*) noexcept;
+
+	curl_off_t offset;
 	int origin;
 };
 
 struct easy_ref::progress
 {
-	using signature = int(void*, off_t, off_t, off_t, off_t);
+	curl_off_t dltotal, dlnow, ultotal, ulnow;
 
-	progress(void*, off_t dt, off_t dn, off_t ut, off_t un) noexcept
+	using signature = int(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
+
+	progress(void*, curl_off_t dt, curl_off_t dn, curl_off_t ut, curl_off_t un) noexcept
 	: dltotal(dt), dlnow(dn), ultotal(ut), ulnow(un) {}
 
-	static void* dataptr(void* x, off_t, off_t, off_t, off_t) noexcept
+	static void* dataptr(void* x, curl_off_t, curl_off_t, curl_off_t, curl_off_t) noexcept
 	{
 		return x;
 	}
 
-	off_t dltotal, dlnow, ultotal, ulnow;
+	static void setopt(CURL*, signature*, void*) noexcept;
 };
 } // namespace curl
 namespace curl { // easy_handle

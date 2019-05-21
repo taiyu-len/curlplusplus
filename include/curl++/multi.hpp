@@ -32,7 +32,7 @@ public:
 	 * @throws curl::mcode
 	 */
 	template<CURLMoption o, typename T>
-	inline void set(detail::multi_option<o, T> x)
+	inline void set(option::detail::multi_option<o, T> x)
 	{
 		invoke(curl_multi_setopt, handle, o, x.value);
 	}
@@ -54,9 +54,9 @@ public:
 	template<typename Event, bool NoError = false, typename T>
 	inline void set_handler(T *x) noexcept
 	{
-		constexpr auto fptr = option::handler<Event>::template from_mem_fn<T>();
+		constexpr auto fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "Could not find `x->handle(e)`");
-		fptr.multi(handle, x);
+		Event::setopt(handle, fptr, x);
 	}
 
 	/** Set callback from static member function, and dataptr to nullptr.
@@ -67,9 +67,9 @@ public:
 	template<typename Event, typename T>
 	inline void set_handler() noexcept
 	{
-		constexpr auto fptr = option::handler<Event>::template from_static_fn<T>();
+		constexpr auto fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(fptr, "Could not find `T::handle(e)`");
-		fptr.multi(handle, nullptr);
+		Event::setopt(handle, fptr, nullptr);
 	}
 
 	/** Set callback from static member function, and dataptr to param.
@@ -82,9 +82,9 @@ public:
 	template<typename Event, typename T, typename D>
 	inline void set_handler(D *x) noexcept
 	{
-		constexpr auto fptr = option::handler<Event>::template from_static_fn<T, D>();
+		constexpr auto fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "Could not find `T::handle(e, d)`");
-		fptr.multi(handle, x);
+		Event::setopt(handle, fptr, x);
 	}
 };
 

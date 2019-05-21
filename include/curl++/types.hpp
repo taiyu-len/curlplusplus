@@ -9,7 +9,6 @@ struct easy_ref;
 
 // simple typedefs of curl types
 using infotype = curl_infotype;
-using off_t    = curl_off_t;
 using socket_t = curl_socket_t;
 
 // error buffer type

@@ -4,7 +4,7 @@
 #include <curl/curl.h>        // for CURLOPT*
 #include <string>             // for string
 namespace curl {
-
+namespace option { /* curl easy options */
 namespace detail { /* easy_option */
 
 // used to wrap easy option types
@@ -13,17 +13,12 @@ using easy_option = option_base<CURLoption, option, T>;
 
 // used to construct easy option types with set value.
 template<CURLoption option, unsigned long value>
-struct easy_option_enum
-	: public easy_option<option, unsigned long>
+struct easy_option_enum : public easy_option<option, unsigned long>
 {
-	easy_option_enum()
-	: easy_option<option, unsigned long>(value)
-	{
-		// NOOP
-	}
+	easy_option_enum() noexcept : easy_option<option, unsigned long>(value) {}
 };
+
 } // namespace detail
-namespace option { /* curl easy options */
 
 //@{
 /// Curl option types
@@ -36,6 +31,7 @@ auto state(T *x) noexcept -> state_t<T> { return {x}; }
 
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
+using no_progress     = CURL_OPTION_TYPE(NOPROGRESS, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
 using error_buffer    = CURL_OPTION_TYPE(ERRORBUFFER, curl::error_buffer);
 namespace netrc {
