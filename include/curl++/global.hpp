@@ -6,11 +6,9 @@ namespace curl {
  *
  * see curl_global_init, curl_global_cleanup
  */
-struct global
-{
+struct global {
 	/** Bit flags used to initialize curl global state. */
-	enum flags : unsigned long
-	{
+	enum flags : unsigned long {
 		ALL        = CURL_GLOBAL_ALL,
 		SSL        = CURL_GLOBAL_SSL,
 		WIN32      = CURL_GLOBAL_WIN32,

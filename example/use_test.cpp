@@ -2,8 +2,7 @@
  */
 #include <curl++/easy.hpp>
 #include <iostream>
-struct print_callbacks : curl::easy<print_callbacks>
-{
+struct print_callbacks : curl::easy<print_callbacks> {
 	print_callbacks() {
 		namespace o = curl::option;
 		set(o::url("www.example.com"));

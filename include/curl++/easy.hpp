@@ -11,8 +11,7 @@
 #include <curl/curl.h>       // for CURL
 namespace curl { // easy_ref
 
-struct easy_ref
-{
+struct easy_ref {
 protected:
 	friend struct multi_ref;
 	CURL* handle = nullptr;
@@ -130,9 +129,9 @@ using write    = easy_ref::write;
 using progress = easy_ref::progress;
 }
 
-struct fwrite_event : buffer
-{
+struct fwrite_event : buffer {
 	using signature = size_t(char*, size_t, size_t, void*);
+
 	fwrite_event(char* d, size_t s, size_t t, void*) noexcept
 	: buffer{d, s*t} {};
 
@@ -142,28 +141,30 @@ struct fwrite_event : buffer
 	}
 };
 
-struct easy_ref::header : fwrite_event
-{
+struct easy_ref::header : fwrite_event {
 	using fwrite_event::fwrite_event;
+
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::read : fwrite_event
-{
+struct easy_ref::read : fwrite_event {
 	using fwrite_event::fwrite_event;
+
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::write : fwrite_event
-{
+struct easy_ref::write : fwrite_event {
 	using fwrite_event::fwrite_event;
+
 	static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::debug : buffer
-{
+struct easy_ref::debug : buffer {
 	using signature = int(CURL*, infotype, char*, size_t, void*);
+
+	easy_ref handle;
+	infotype type;
 
 	debug(CURL* e, infotype i, char* c, size_t s, void*) noexcept
 	: buffer{c, s} , handle(e) , type(i) {}
@@ -174,14 +175,13 @@ struct easy_ref::debug : buffer
 	}
 
 	static void setopt(CURL*, signature*, void*) noexcept;
-
-	easy_ref handle;
-	infotype type;
 };
 
-struct easy_ref::seek
-{
+struct easy_ref::seek {
 	using signature = int(void*, curl_off_t, int);
+
+	curl_off_t offset;
+	int origin;
 
 	seek(void*, curl_off_t offset, int origin) noexcept
 	: offset(offset), origin(origin) {}
@@ -192,13 +192,9 @@ struct easy_ref::seek
 	}
 
 	static void setopt(CURL*, signature*, void*) noexcept;
-
-	curl_off_t offset;
-	int origin;
 };
 
-struct easy_ref::progress
-{
+struct easy_ref::progress {
 	curl_off_t dltotal, dlnow, ultotal, ulnow;
 
 	using signature = int(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
@@ -217,8 +213,7 @@ struct easy_ref::progress
 namespace curl { // easy_handle
 
 /** Lightweight RAII class for a curl easy handle. */
-struct easy_handle : public easy_ref
-{
+struct easy_handle : public easy_ref {
 	/** curl_easy_init.
 	 * @throws std::runtime_error on failure to create handle.
 	 */
@@ -239,8 +234,7 @@ namespace curl { // easy
  * @param T The parent type.
  */
 template<typename T>
-struct easy : public easy_handle
-{
+struct easy : public easy_handle {
 	easy() noexcept
 	{
 		set_handler< debug,    true >(self());

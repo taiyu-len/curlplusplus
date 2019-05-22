@@ -15,8 +15,7 @@ template<typename E, typename = typename E::signature>
 struct invoke_handler;
 
 template<typename E, typename R, typename ...Args>
-struct invoke_handler<E, R(Args...)>
-{
+struct invoke_handler<E, R(Args...)> {
 	template<typename T>
 	static auto invoke_mem_fn(Args... args) -> R
 	{
@@ -56,8 +55,7 @@ using detect_static_fn_with_data = decltype(T::handle(std::declval<E>(), std::de
 // default extractor
 
 template<typename E>
-struct extract_default
-{
+struct extract_default {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
@@ -81,8 +79,7 @@ struct extract_static_fn_with_data : detail::extract_default<E> {};
 //
 
 template<typename E, typename T>
-struct extract_mem_fn<E, T, detail::detect_mem_fn<E, T>>
-{
+struct extract_mem_fn<E, T, detail::detect_mem_fn<E, T>> {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
@@ -91,8 +88,7 @@ struct extract_mem_fn<E, T, detail::detect_mem_fn<E, T>>
 };
 
 template<typename E, typename T>
-struct extract_static_fn<E, T, detail::detect_static_fn<E, T>>
-{
+struct extract_static_fn<E, T, detail::detect_static_fn<E, T>> {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
@@ -101,8 +97,7 @@ struct extract_static_fn<E, T, detail::detect_static_fn<E, T>>
 };
 
 template<typename E, typename T, typename D>
-struct extract_static_fn_with_data<E, T, D, detail::detect_static_fn_with_data<E, T, D>>
-{
+struct extract_static_fn_with_data<E, T, D, detail::detect_static_fn_with_data<E, T, D>> {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{

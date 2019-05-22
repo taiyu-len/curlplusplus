@@ -6,15 +6,13 @@ namespace curl {
 namespace option { /* Curl multi options */
 namespace detail { /* multi_option */
 template<CURLMoption option, typename T>
-struct multi_option : public option_base<CURLMoption, option, T>
-{
+struct multi_option : public option_base<CURLMoption, option, T> {
 	using option_base<CURLMoption, option, T>::option_base;
 };
 
 /* Enumerated options */
 template<CURLMoption option, unsigned long value, typename T = unsigned long>
-struct multi_option_enum : public multi_option<option, T>
-{
+struct multi_option_enum : public multi_option<option, T> {
 	multi_option_enum()
 	: multi_option<option, T>(value)
 	{}

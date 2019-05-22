@@ -1,5 +1,6 @@
 #include <curl++/types.hpp>
 namespace curl {
+
 error_buffer::error_buffer()
 : std::string(CURL_ERROR_SIZE, '\0')
 {
@@ -79,5 +80,5 @@ ucode::operator bool() const noexcept
 {
 	return value != CURLUE_OK;
 }
-} // namespace curl
 
+} // namespace curl

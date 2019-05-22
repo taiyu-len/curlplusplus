@@ -9,8 +9,7 @@
 #include <curl/curl.h>
 namespace curl { // multi_ref
 
-struct multi_ref
-{
+struct multi_ref {
 protected:
 	CURLM* handle = nullptr;
 public:
@@ -89,8 +88,7 @@ public:
 	}
 };
 
-struct multi_ref::message
-{
+struct multi_ref::message {
 	CURLMSG msg;
 	easy_ref easy_handle;
 	union {
@@ -103,8 +101,7 @@ struct multi_ref::message
 namespace curl { // multi_ref::events
 
 // TODO implement
-struct multi_ref::push
-{
+struct multi_ref::push {
 	using signature = int(CURL*, CURL*, size_t, curl_pushheaders*, void*);
 	push(CURL*, CURL*, size_t, curl_pushheaders*, void*);
 
@@ -112,10 +109,11 @@ struct multi_ref::push
 	{
 		return x;
 	}
+
+	static void setopt(CURLM*, signature*, void*) noexcept;
 };
 
-struct multi_ref::socket
-{
+struct multi_ref::socket {
 	using signature = int(CURL*, curl_socket_t, int, void*, void*);
 	enum poll
 	{
@@ -126,21 +124,22 @@ struct multi_ref::socket
 	};
 
 	easy_ref      easy;
-	curl_socket_t socket;
+	curl_socket_t sock;
 	poll          what;
 	void*         data;
 
 	socket(CURL* e, curl_socket_t s, int w, void*, void* d) noexcept
-	: easy(e), socket(s), what(w), data(d) {}
+	: easy(e), sock(s), what(static_cast<poll>(w)), data(d) {}
 
 	static void* dataptr(CURL*, curl_socket_t, int, void* x, void*) noexcept
 	{
 		return x;
 	}
+
+	static void setopt(CURLM*, signature*, void*) noexcept;
 };
 
-struct multi_ref::timer
-{
+struct multi_ref::timer {
 	using signature = int(CURLM*, long, void*);
 	using milliseconds = std::chrono::milliseconds;
 
@@ -148,19 +147,20 @@ struct multi_ref::timer
 	milliseconds timeout;
 
 	timer(CURLM* m, long timeout_ms, void*) noexcept
-	: multi(m), timeout(ms) {}
+	: multi(m), timeout(timeout_ms) {}
 
 	static void* dataptr(CURLM*, long, void* x) noexcept
 	{
 		return x;
 	}
+
+	static void setopt(CURLM*, signature*, void*) noexcept;
 };
 
 } // namespace curl
 namespace curl { // mutli_handle
 
-struct multi_handle : public multi_ref
-{
+struct multi_handle : public multi_ref {
 	/** curl_multi_init.
 	 * @throws std::runtime_error
 	 */
@@ -180,8 +180,7 @@ namespace curl { // multi
  * @param T the parent type.
  */
 template<typename T>
-struct multi : public multi_handle
-{
+struct multi : public multi_handle {
 	multi() noexcept
 	{
 		// set event handlers conditionally

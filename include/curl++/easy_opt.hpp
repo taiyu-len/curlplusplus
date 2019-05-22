@@ -13,8 +13,7 @@ using easy_option = option_base<CURLoption, option, T>;
 
 // used to construct easy option types with set value.
 template<CURLoption option, unsigned long value>
-struct easy_option_enum : public easy_option<option, unsigned long>
-{
+struct easy_option_enum : public easy_option<option, unsigned long> {
 	easy_option_enum() noexcept : easy_option<option, unsigned long>(value) {}
 };
 

@@ -12,38 +12,33 @@ using infotype = curl_infotype;
 using socket_t = curl_socket_t;
 
 // error buffer type
-struct error_buffer : public std::string
-{
+struct error_buffer : public std::string {
 	error_buffer();
 };
 
 // Curl code types
-struct code : std::exception
-{
+struct code : std::exception {
 	code(CURLcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept override;
 	CURLcode value = CURLE_OK;
 };
 
-struct mcode : std::exception
-{
+struct mcode : std::exception {
 	mcode(CURLMcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept;
 	CURLMcode value = CURLM_OK;
 };
 
-struct shcode : std::exception
-{
+struct shcode : std::exception {
 	shcode(CURLSHcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept;
 	CURLSHcode value = CURLSHE_OK;
 };
 
-struct ucode : std::exception
-{
+struct ucode : std::exception {
 	ucode(CURLUcode value) noexcept : value(value) {};
 	explicit operator bool() const noexcept;
 	const char* what() const noexcept;
@@ -51,13 +46,13 @@ struct ucode : std::exception
 };
 
 /** Flags used for easy::pause(). */
-enum pause : long
-{
+enum pause : long {
 	recv = CURLPAUSE_RECV,
 	send = CURLPAUSE_SEND,
 	all  = CURLPAUSE_ALL,
 	cont = CURLPAUSE_CONT
 };
+
 } // namespace curl
 
 #endif // CURLPLUSPLUS_TYPES_HPP

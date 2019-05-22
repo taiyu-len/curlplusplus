@@ -12,29 +12,25 @@ namespace info {
  * @param T the user facing argument type.
  */
 template<CURLINFO o, typename T>
-struct info
-{
+struct info {
 	using value_type = T;
 	T operator()(T x) const noexcept { return x; }
 };
 
 template<CURLINFO o>
-struct info<o, std::string>
-{
+struct info<o, std::string> {
 	using value_type = const char*;
 	std::string operator()(const char* x) const noexcept { return x; }
 };
 
 template<CURLINFO o>
-struct info<o, bool>
-{
+struct info<o, bool> {
 	using value_type = long;
 	bool operator()(long x) const noexcept { return static_cast<bool>(x); }
 };
 
 template<CURLINFO o, class Rep, class Period>
-struct info<o, std::chrono::duration<Rep, Period>>
-{
+struct info<o, std::chrono::duration<Rep, Period>> {
 	using value_type = curl_off_t;
 	std::chrono::duration<Rep, Period> operator()(curl_off_t x) const noexcept
 	{
