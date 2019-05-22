@@ -5,6 +5,7 @@
 #include "curl++/multi_opt.hpp"
 #include "curl++/option.hpp"      // for handler
 #include "curl++/types.hpp"       // for mcode
+#include <chrono>                 // for milliseconds
 #include <curl/curl.h>
 namespace curl { // multi_ref
 
@@ -100,8 +101,8 @@ struct multi_ref::message
 
 } // namespace curl
 namespace curl { // multi_ref::events
-// TODO implement these
 
+// TODO implement
 struct multi_ref::push
 {
 	using signature = int(CURL*, CURL*, size_t, curl_pushheaders*, void*);
@@ -115,10 +116,24 @@ struct multi_ref::push
 
 struct multi_ref::socket
 {
-	using signature = int(CURL*, curl_socket_t, void*, void*);
-	socket(CURL*, curl_socket_t, void*, void*);
+	using signature = int(CURL*, curl_socket_t, int, void*, void*);
+	enum poll
+	{
+		in     = CURL_POLL_IN,
+		out    = CURL_POLL_OUT,
+		inout  = CURL_POLL_INOUT,
+		remove = CURL_POLL_REMOVE
+	};
 
-	static void* dataptr(CURL*, curl_socket_t, void* x, void*)
+	easy_ref      easy;
+	curl_socket_t socket;
+	poll          what;
+	void*         data;
+
+	socket(CURL* e, curl_socket_t s, int w, void*, void* d) noexcept
+	: easy(e), socket(s), what(w), data(d) {}
+
+	static void* dataptr(CURL*, curl_socket_t, int, void* x, void*) noexcept
 	{
 		return x;
 	}
@@ -127,9 +142,15 @@ struct multi_ref::socket
 struct multi_ref::timer
 {
 	using signature = int(CURLM*, long, void*);
-	timer(CURLM*, long, void*);
+	using milliseconds = std::chrono::milliseconds;
 
-	static void* dataptr(CURLM*, long, void* x)
+	multi_ref    multi;
+	milliseconds timeout;
+
+	timer(CURLM* m, long timeout_ms, void*) noexcept
+	: multi(m), timeout(ms) {}
+
+	static void* dataptr(CURLM*, long, void* x) noexcept
 	{
 		return x;
 	}
