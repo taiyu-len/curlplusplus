@@ -1,12 +1,9 @@
 #ifndef CURLPLUSPLUS_TYPES_HPP
 #define CURLPLUSPLUS_TYPES_HPP
 #include <curl/curl.h>   // for CURLMcode, CURLSHcode, CURLUcode, CURLcode
-#include <curl/system.h> // for curl_off_t
 #include <exception>     // for exception
 #include <string>        // for string
 namespace curl {
-struct easy_ref;
-
 // simple typedefs of curl types
 using infotype = curl_infotype;
 using socket_t = curl_socket_t;

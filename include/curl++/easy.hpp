@@ -129,11 +129,12 @@ using write    = easy_ref::write;
 using progress = easy_ref::progress;
 }
 
-struct fwrite_event : buffer {
+template<typename T>
+struct fwrite_event : T {
 	using signature = size_t(char*, size_t, size_t, void*);
 
 	fwrite_event(char* d, size_t s, size_t t, void*) noexcept
-	: buffer{d, s*t} {};
+	: T{d, s*t} {};
 
 	static void* dataptr(char*, size_t, size_t, void* x) noexcept
 	{
@@ -141,33 +142,34 @@ struct fwrite_event : buffer {
 	}
 };
 
-struct easy_ref::header : fwrite_event {
+struct easy_ref::header : fwrite_event<const_buffer> {
 	using fwrite_event::fwrite_event;
 
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::read : fwrite_event {
+struct easy_ref::read : fwrite_event<buffer> {
 	using fwrite_event::fwrite_event;
 
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::write : fwrite_event {
+struct easy_ref::write : fwrite_event<const_buffer> {
 	using fwrite_event::fwrite_event;
 
 	static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
+
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::debug : buffer {
+struct easy_ref::debug : const_buffer {
 	using signature = int(CURL*, infotype, char*, size_t, void*);
 
 	easy_ref handle;
 	infotype type;
 
 	debug(CURL* e, infotype i, char* c, size_t s, void*) noexcept
-	: buffer{c, s} , handle(e) , type(i) {}
+	: const_buffer{c, s} , handle(e) , type(i) {}
 
 	static void* dataptr(CURL*, infotype, char*, size_t, void* x) noexcept
 	{

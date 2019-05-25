@@ -43,7 +43,7 @@ int print_debug::handle(debug x) noexcept
 	switch(x.type)
 	{
 	case CURLINFO_TEXT:
-		fprintf(stderr, "== Info: %*s", int(x.size), x.data);
+		fprintf(stderr, "== Info: %*s", int(x.size()), x.data());
 		/* FALLTHROUGH */ 
 	default: /* in case a new one is introduced to shock us */ 
 		return 0;
@@ -67,7 +67,7 @@ int print_debug::handle(debug x) noexcept
 		break;
 	}
 
-	dump(text, stderr, (unsigned char*)(x.data), x.size);
+	dump(text, stderr, (unsigned char*)(x.data()), x.size());
 	return 0;
 }
 

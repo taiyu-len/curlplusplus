@@ -43,6 +43,6 @@ to_file::to_file(const char* url, const char* filename)
 }
 size_t to_file::handle(write w) noexcept
 {
-	stream.write(w.data, w.size);
-	return stream ? w.size : 0;
+	stream.write(w.data(), w.size());
+	return stream ? w.size() : 0;
 }

@@ -10,17 +10,17 @@ struct print_callbacks : curl::easy<print_callbacks> {
 		set(o::no_progress(false));
 	}
 	static size_t handle(write w) {
-		std::cout << "called write   : recieved " << w.size << '\n';
-		return w.size;
+		std::cout << "called write   : received " << w.size() << '\n';
+		return w.size();
 	}
 	static size_t handle(header w) {
-		std::cout << "called header  : recieved " << w.size << '\n';
-		printf("    %*s", int(w.size), w.data);
-		return w.size;
+		std::cout << "called header  : recieved " << w.size() << '\n';
+		printf("    %*s", int(w.size()), w.data());
+		return w.size();
 	}
 	static size_t handle(read w) {
-		std::cout << "called read    : " << w.size << '\n';
-		return w.size;
+		std::cout << "called read    : " << w.size() << '\n';
+		return w.size();
 	}
 	static int handle(seek) {
 		std::cout << "called seek    :\n";

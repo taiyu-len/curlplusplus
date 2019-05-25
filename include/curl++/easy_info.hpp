@@ -1,7 +1,6 @@
 #ifndef CURLPLUSPLUS_EASY_INFO_HPP
 #define CURLPLUSPLUS_EASY_INFO_HPP
-#include "curl++/types.hpp"
-#include <curl/curl.h> // for CURLINFO*
+#include <curl/curl.h>   // for CURLINFO*
 #include <string>
 #include <chrono>
 

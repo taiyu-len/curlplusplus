@@ -2,9 +2,9 @@
 #include <iostream>
 #include <chrono>
 struct nowrite {
-	static size_t handle(curl::easy_ref::write w) noexcept
+	static size_t handle(curl::easy_events::write w) noexcept
 	{
-		return w.size;
+		return w.size();
 	}
 };
 
