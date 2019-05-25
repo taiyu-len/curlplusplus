@@ -38,6 +38,22 @@ struct invoke_handler<E, R(Args...)> {
 		auto state = static_cast<D*>(E::dataptr(args...));
 		return T::handle(event, state);
 	}
+#if 0
+	template<auto fptr>
+	static auto invoke_fptr(Args... args) -> R
+	{
+		auto event = E(args...);
+		return fptr(event);
+	}
+
+	template<auto fptr, typename D>
+	static auto invoke_fptr_with_data(Args... args) -> R
+	{
+		auto event = E(args...);
+		auto state = static_cast<D*>(E::dataptr(args...));
+		return fptr(event, state);
+	}
+#endif
 };
 
 // detects t.handle(e);
@@ -104,6 +120,33 @@ struct extract_static_fn_with_data<E, T, D, detail::detect_static_fn_with_data<E
 		return &detail::invoke_handler<E>::template invoke_static_fn_with_data<T, D>;
 	}
 };
+
+#if 0
+template<auto x>
+struct extract_fptr;
+
+template<typename R, typename E, R(*fp)(E)>
+struct extract_fptr<fp>
+{
+	static constexpr
+	typename E::signature* fptr() noexcept
+	{
+		return &detail::invoke_handle<E>::template invoke_fptr<fp>;
+	}
+};
+template<auto x, typename D>
+struct extract_fptr_with_data;
+
+template<typename R, typename E, typename D, R(*fp)(E, D*)>
+struct extract_fptr<fp, D>
+{
+	static constexpr
+	typename E::signature* fptr() noexcept
+	{
+		return &detail::invoke_handle<E>::template invoke_fptr_with_data<fp, D>;
+	}
+};
+#endif
 
 } // namespace curl
 #endif // CURLPLUSPLUS_EXTRACT_FUNCTION_HPP

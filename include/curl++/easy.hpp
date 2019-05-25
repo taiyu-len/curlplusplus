@@ -101,6 +101,40 @@ public:
 		Event::setopt(handle, fptr, nullptr);
 	}
 
+#if 0
+	/** Set callback from a lambda.
+	 *
+	 * only works in c++17 due to constexpr conversion to function pointer.
+	 * and does not work in g++ due to a bug
+	 *   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258
+	 *
+	 * sfinae is used to check if +T gives a value and is constexpr.
+	 *
+	 */
+	template<typename T,
+		typename F = decltype(+std::declval<T>()),
+		F x = +std::declval<T>()>
+	inline void set_handle(T x) noexcept
+	{
+		constexpr auto fptr = +x;
+		constexpr fptr_t fptr = extract_fptr<fptr>::fptr();
+		Event::setopt(handle, fptr, nullptr);
+	}
+
+	/** Set callback from a lambda and data pointer.
+	 * same as above.
+	 */
+	template<typename T, typename D,
+		typename F = decltype(+std::declval<T>()),
+		F x = +std::declval<T>()>
+	inline void set_handle(T x, D* y) noexcept
+	{
+		constexpr auto fptr = +x;
+		constexpr fptr_t fptr = extract_fptr_with_data<fptr, D>::fptr();
+		Event::setopt(handle, fptr, y);
+	}
+#endif
+
 	/** Set callback from static member function, and dataptr to param.
 	 * @param T Contains static member functions for event.
 	 * @param D Data pointer for event
