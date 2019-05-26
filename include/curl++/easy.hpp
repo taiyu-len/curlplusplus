@@ -17,7 +17,7 @@ protected:
 	CURL* handle = nullptr;
 public:
 	easy_ref() noexcept = default;
-	easy_ref(CURL *handle) noexcept;
+	easy_ref(CURL *h) noexcept : handle(h) {};
 
 	/// @return handle != nullptr
 	explicit operator bool() const noexcept { return handle; }
@@ -231,9 +231,9 @@ struct easy_ref::seek {
 };
 
 struct easy_ref::progress {
-	curl_off_t dltotal, dlnow, ultotal, ulnow;
-
 	using signature = int(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
+
+	curl_off_t dltotal, dlnow, ultotal, ulnow;
 
 	progress(void*, curl_off_t dt, curl_off_t dn, curl_off_t ut, curl_off_t un) noexcept
 	: dltotal(dt), dlnow(dn), ultotal(ut), ulnow(un) {}
