@@ -23,13 +23,9 @@ struct easy_option_enum : public easy_option<option, unsigned long> {
 /// Curl option types
 #define CURL_OPTION_TYPE(NAME, TYPE) detail::easy_option<CURLOPT_##NAME, TYPE>
 #define CURL_ENUM_TYPE(NAME, VALUE)  detail::easy_option_enum<CURLOPT_##NAME, VALUE>
-template<typename T>
-using state_t         = CURL_OPTION_TYPE(PRIVATE, T*);
-template<typename T>
-auto state(T *x) noexcept -> state_t<T> { return {x}; }
-
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
+using userdata        = CURL_OPTION_TYPE(PRIVATE, void*);
 using no_progress     = CURL_OPTION_TYPE(NOPROGRESS, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
 using error_buffer    = CURL_OPTION_TYPE(ERRORBUFFER, curl::error_buffer);

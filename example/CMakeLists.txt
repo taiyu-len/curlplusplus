@@ -17,3 +17,6 @@ target_link_libraries(use_test PRIVATE curl++)
 
 add_executable(time time.cc)
 target_link_libraries(time PRIVATE curl++)
+
+add_executable(10-at-a-time 10-at-a-time.cc)
+target_link_libraries(10-at-a-time PRIVATE curl++)

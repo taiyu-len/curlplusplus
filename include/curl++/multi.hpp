@@ -7,7 +7,12 @@
 #include "curl++/types.hpp"       // for mcode
 #include <chrono>                 // for milliseconds
 #include <curl/curl.h>
+#include <iterator>
 namespace curl { // multi_ref
+
+// TODO lots of work refining the usage of this class.
+// as it is now its a very light wrapper over the c-api and exposes raw bits
+// here and there.
 
 struct multi_ref {
 protected:
@@ -19,7 +24,9 @@ public:
 	explicit operator bool() const noexcept { return handle; }
 
 	void add_handle(easy_ref);
+	void remove_handle(easy_ref);
 	void assign(socket_t, void* data);
+	auto perform() -> int;
 
 	/** wrapper for curl_multi_socket_action.
 	 * @return number of running handles.
@@ -27,12 +34,14 @@ public:
 	 */
 	auto socket_action(socket_t, int ev_bitmask) -> int;
 
-	// TODO: consider making a messages object that acts as a container of
-	// curlmsgs that can be iterated over.
-	using message = CURLMsg;
+	struct info_read_proxy;
 
-	/** wrapper for curl_multi_info_read. */
-	auto info_read() -> message*;
+	/** wrapper for curl_multi_info_read.
+	 * @returns an iterable object returning CURLMsg objects
+	 */
+	auto info_read() -> info_read_proxy;
+
+	auto wait(std::chrono::milliseconds) -> int;
 
 	/** Set a curl multi option.
 	 * @pre handle != nullptr
@@ -93,6 +102,40 @@ public:
 		static_assert(fptr, "Could not find `T::handle(e, d)`");
 		Event::setopt(handle, fptr, x);
 	}
+};
+
+} // namespace curl
+namespace curl { // multi_ref::info_read_proxy
+struct multi_ref::info_read_proxy {
+	struct iterator {
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = CURLMsg;
+		using difference_type = int;
+		using pointer = CURLMsg*;
+		using reference = CURLMsg&;
+
+		iterator() noexcept = default;
+		iterator(CURLM *) noexcept;
+
+		bool operator!=(iterator x) noexcept {
+			return _message != x._message;
+		}
+		iterator& operator++() noexcept;
+		reference operator*()  noexcept { return *_message; }
+		pointer   operator->() noexcept { return _message; }
+		int remaining() const  noexcept { return _remaining; }
+
+	private:
+		CURLM* _handle    = nullptr;
+		CURLMsg* _message = nullptr;
+		int _remaining    = 0;
+	};
+	info_read_proxy(CURLM * h): _handle(h) {}
+	auto begin() -> iterator { return {_handle}; }
+	auto end()   -> iterator { return {}; }
+
+private:
+	CURLM*   _handle;
 };
 
 } // namespace curl

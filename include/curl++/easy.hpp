@@ -8,6 +8,7 @@
 #include "curl++/option.hpp" // for handler
 #include "curl++/types.hpp"  // for code
 #include <cstddef>           // for size_t
+#include <utility>
 #include <curl/curl.h>       // for CURL
 namespace curl { // easy_ref
 
@@ -254,10 +255,18 @@ struct easy_handle : public easy_ref {
 	 * @throws std::runtime_error on failure to create handle.
 	 */
 	easy_handle();
+
+	/** Take ownership of an easy_ref.
+	 * @warning watch out for multiple owners.
+	 */
+	explicit easy_handle(easy_ref er) noexcept : easy_ref(er) {};
 	~easy_handle() noexcept;
 
 	easy_handle(easy_handle &&) noexcept;
 	easy_handle& operator=(easy_handle &&) noexcept;
+
+	// release ownership of handle
+	auto release() -> easy_ref { return std::exchange(handle, nullptr); }
 
 private:
 	using easy_ref::handle;
