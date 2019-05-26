@@ -20,12 +20,19 @@ public:
 
 	void add_handle(easy_ref);
 	void assign(socket_t, void* data);
-	void socket_action(socket_t, int ev_bitmask, int* left);
 
-	struct message;
+	/** wrapper for curl_multi_socket_action.
+	 * @return number of running handles.
+	 * @throws curl::mcode
+	 */
+	auto socket_action(socket_t, int ev_bitmask) -> int;
 
-	/** Read next message from multi handle. */
-	auto info_read() -> message;
+	// TODO: consider making a messages object that acts as a container of
+	// curlmsgs that can be iterated over.
+	using message = CURLMsg;
+
+	/** wrapper for curl_multi_info_read. */
+	auto info_read() -> message*;
 
 	/** Set a curl multi option.
 	 * @pre handle != nullptr
@@ -88,21 +95,13 @@ public:
 	}
 };
 
-struct multi_ref::message {
-	CURLMSG msg;
-	easy_ref easy_handle;
-	union {
-		void* whatever;
-		code result;
-	} data;
-};
-
 } // namespace curl
 namespace curl { // multi_ref::events
 
 // TODO implement
 struct multi_ref::push {
 	using signature = int(CURL*, CURL*, size_t, curl_pushheaders*, void*);
+
 	push(CURL*, CURL*, size_t, curl_pushheaders*, void*);
 
 	static void* dataptr(CURL*, CURL*, size_t, curl_pushheaders*, void* x) noexcept

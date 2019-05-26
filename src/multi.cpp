@@ -15,6 +15,19 @@ void multi_ref::add_handle(easy_ref ref)
 	invoke(curl_multi_add_handle, handle, raw_easy_handle);
 }
 
+void multi_ref::assign(socket_t sockfd, void* data)
+{
+	invoke(curl_multi_assign, handle, sockfd, data);
+}
+
+int multi_ref::socket_action(socket_t sockfd, int ev_bitmask)
+{
+	int running_handles;
+	invoke(curl_multi_socket_action, handle, sockfd, ev_bitmask,
+	       &running_handles);
+	return running_handles;
+}
+
 } // namespace curl
 namespace curl { // multi_handle
 multi_handle::multi_handle()
