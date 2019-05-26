@@ -20,33 +20,33 @@ public:
 	easy_ref() noexcept = default;
 	easy_ref(CURL *h) noexcept : handle(h) {};
 
-	/** wrapper for curl_easy_init.
+	/** see curl_easy_init.
 	 * initialize a new handle, and cleanup old handle.
 	 */
 	void init();
 
-	/** wrapper for curl_easy_cleanup.
+	/** see curl_easy_cleanup.
 	 * Resets the handle to nullptr, or to the given handle.
 	 */
 	void reset(CURL* h) noexcept;
 	void reset() noexcept { reset(nullptr); }
 
-	/// @return handle != nullptr
+	/** @return handle != nullptr */
 	explicit operator bool() const noexcept { return handle; }
 
-	/** See curl_easy_pause.
+	/** see curl_easy_pause.
 	 * @throws curl::code
 	 * @pre *this
 	 */
 	void pause(curl::pause flag);
 
-	/** curl_easy_perform.
+	/** see curl_easy_perform.
 	 * @throws curl::code
 	 * @pre *this
 	 */
 	void perform();
 
-	/** curl_easy_setopt.
+	/** see curl_easy_setopt.
 	 * @throws curl::code
 	 * @pre *this
 	 *
@@ -58,7 +58,7 @@ public:
 		invoke(curl_easy_setopt, handle, o, x.value);
 	}
 
-	/** curl_easy_getinfo
+	/** see curl_easy_getinfo
 	 * @throws curl::code
 	 * @pre *this
 	 *
@@ -80,7 +80,7 @@ public:
 	struct write;
 	struct progress;
 
-	/** Set callback and dataptr from member functions of T.
+	/** see curl_easy_setopt, sets FUNCTION and DATA pointers for event.
 	 * @pre *this
 	 * @requires x->handle(E);
 	 *
@@ -104,12 +104,12 @@ public:
 	 *
 	 * usage: set_handler<write, T>();
 	 */
-	template<typename Event, typename T>
+	template<typename Event, typename T, bool NoError = false>
 	inline void set_handler() noexcept
 	{
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn<Event, T>::fptr();
-		static_assert(fptr, "Could not find `T::handle(e)`");
+		static_assert(NoError || fptr, "Could not find `T::handle(e)`");
 		Event::setopt(handle, fptr, nullptr);
 	}
 
@@ -176,31 +176,33 @@ using progress = easy_ref::progress;
 }
 
 template<typename T>
-struct fwrite_event : T {
+struct fevent_base : T {
 	using signature = size_t(char*, size_t, size_t, void*);
 
-	fwrite_event(char* d, size_t s, size_t t, void*) noexcept
+	fevent_base(char* d, size_t s, size_t t, void*) noexcept
 	: T{d, s*t} {};
 
-	static void* dataptr(char*, size_t, size_t, void* x) noexcept
+	static auto dataptr(char*, size_t, size_t, void* x) noexcept -> void*
 	{
 		return x;
 	}
 };
+using fwrite_event = fevent_base<const_buffer>;
+using fread_event  = fevent_base<buffer>;
 
-struct easy_ref::header : fwrite_event<const_buffer> {
+struct easy_ref::header : fwrite_event {
 	using fwrite_event::fwrite_event;
 
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::read : fwrite_event<buffer> {
-	using fwrite_event::fwrite_event;
+struct easy_ref::read : fread_event {
+	using fread_event::fread_event;
 
 	static void setopt(CURL*, signature*, void*) noexcept;
 };
 
-struct easy_ref::write : fwrite_event<const_buffer> {
+struct easy_ref::write : fwrite_event {
 	using fwrite_event::fwrite_event;
 
 	static constexpr size_t pause = CURL_WRITEFUNC_PAUSE;
@@ -217,7 +219,7 @@ struct easy_ref::debug : const_buffer {
 	debug(CURL* e, infotype i, char* c, size_t s, void*) noexcept
 	: const_buffer{c, s} , handle(e) , type(i) {}
 
-	static void* dataptr(CURL*, infotype, char*, size_t, void* x) noexcept
+	static auto dataptr(CURL*, infotype, char*, size_t, void* x) noexcept -> void*
 	{
 		return x;
 	}
@@ -234,7 +236,7 @@ struct easy_ref::seek {
 	seek(void*, curl_off_t offset, int origin) noexcept
 	: offset(offset), origin(origin) {}
 
-	static void* dataptr(void* x, curl_off_t, int) noexcept
+	static auto dataptr(void* x, curl_off_t, int) noexcept -> void*
 	{
 		return x;
 	}
@@ -247,10 +249,12 @@ struct easy_ref::progress {
 
 	curl_off_t dltotal, dlnow, ultotal, ulnow;
 
-	progress(void*, curl_off_t dt, curl_off_t dn, curl_off_t ut, curl_off_t un) noexcept
+	progress(void*, curl_off_t dt, curl_off_t dn,
+	         curl_off_t ut, curl_off_t un) noexcept
 	: dltotal(dt), dlnow(dn), ultotal(ut), ulnow(un) {}
 
-	static void* dataptr(void* x, curl_off_t, curl_off_t, curl_off_t, curl_off_t) noexcept
+	static auto dataptr(void* x, curl_off_t, curl_off_t,
+	                    curl_off_t, curl_off_t) noexcept -> void*
 	{
 		return x;
 	}
@@ -273,6 +277,8 @@ struct easy_handle : public easy_ref {
 	explicit easy_handle(easy_ref er) noexcept : easy_ref(er) {};
 	~easy_handle() noexcept;
 
+	/** Move ownership from one handle to another.
+	 */
 	easy_handle(easy_handle &&) noexcept;
 	easy_handle& operator=(easy_handle &&) noexcept;
 
@@ -302,6 +308,9 @@ struct easy : public easy_handle {
 	}
 private:
 	auto self() noexcept -> T* { return static_cast<T*>(this); }
+	// prevent slicing
+	operator easy_handle() = delete;
+
 	using easy_handle::easy_handle;
 	using easy_handle::set_handler;
 };

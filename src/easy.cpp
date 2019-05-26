@@ -36,6 +36,7 @@ void easy_ref::perform()
 namespace curl { // curl_ref::events
 
 namespace { // gets CURLOPTs per event type
+
 template<typename E> struct opts;
 #define OPTION(n, N) \
 template<> struct opts<easy_ref::n> { \
@@ -48,6 +49,7 @@ OPTION(progress, XFERINFO);
 OPTION(read, READ);
 OPTION(seek, SEEK);
 #undef OPTION
+
 } // namespace
 
 #define DEFINE_DEFAULT_SETOPT(EVENT) \
@@ -65,7 +67,7 @@ DEFINE_DEFAULT_SETOPT(seek);
 
 
 // Specialized version of write, to set it to a no-op
-static size_t nowrite(char*, size_t x, size_t y, void*) noexcept
+static auto nowrite(char*, size_t x, size_t y, void*) noexcept -> size_t
 {
 	return x*y;
 }
@@ -88,7 +90,7 @@ easy_handle::easy_handle(easy_handle &&x) noexcept
 	: easy_ref(std::exchange(x.handle, nullptr))
 {}
 
-easy_handle& easy_handle::operator=(easy_handle && x) noexcept
+auto easy_handle::operator=(easy_handle && x) noexcept -> easy_handle&
 {
 	reset(std::exchange(x.handle, nullptr));
 	return *this;
