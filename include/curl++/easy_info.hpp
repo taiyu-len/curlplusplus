@@ -57,16 +57,17 @@ constexpr auto size_download     = CURL_INFO_TYPE(SIZE_DOWNLOAD_T, curl_off_t);
 // bytes per second
 constexpr auto speed_upload      = CURL_INFO_TYPE(SPEED_UPLOAD_T, curl_off_t);
 constexpr auto speed_download    = CURL_INFO_TYPE(SPEED_DOWNLOAD_T, curl_off_t);
-
 constexpr auto header_size       = CURL_INFO_TYPE(HEADER_SIZE, long);
 constexpr auto request_size      = CURL_INFO_TYPE(REQUEST_SIZE, long);
 
 constexpr auto content_length_download = CURL_INFO_TYPE(CONTENT_LENGTH_DOWNLOAD_T, curl_off_t);
-constexpr auto content_length_upload = CURL_INFO_TYPE(CONTENT_LENGTH_UPLOAD_T, curl_off_t);
+constexpr auto content_length_upload   = CURL_INFO_TYPE(CONTENT_LENGTH_UPLOAD_T, curl_off_t);
 
-constexpr auto content_type      = CURL_INFO_TYPE(CONTENT_TYPE, std::string);
+constexpr auto content_type       = CURL_INFO_TYPE(CONTENT_TYPE, std::string);
 
-constexpr auto userdata          = CURL_INFO_TYPE(PRIVATE, void*);
+// T should be a pointer.
+template<typename T>
+constexpr auto userdata = CURL_INFO_TYPE(PRIVATE, T);
 
 // TODO rather then a duration, a timepoint may be better
 constexpr auto filetime           = CURL_INFO_TYPE(FILETIME_T, std::chrono::seconds);

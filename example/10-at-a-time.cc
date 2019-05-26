@@ -19,7 +19,7 @@ static void add_transfer(curl::multi_ref cm, const char* url)
 	namespace o = curl::option;
 	fprintf(stderr, "Adding url %s\n", url);
 	eh.set(o::url(url));
-	eh.set(o::userdata((void*)url));
+	eh.set(o::userdata(url));
 	eh.set_handler<curl::easy_events::write, nowrite>();
 	/* Could be done on clang with c++17. */
 	// eh::set_handle([](eh::write w){ return w.size(); });
@@ -47,7 +47,7 @@ int main(void) {
 	}
 
 	do {
-		bool is_alive = m.perform();
+		auto active = m.perform();
 		for (auto &msg : m.info_read())
 		{
 			if (msg.msg == CURLMSG_DONE)
@@ -57,18 +57,18 @@ int main(void) {
 				namespace i = curl::info;
 				fprintf(stderr, "R: %d - %s < %s >\n",
 					cc.value, cc.what(),
-					eh.get(i::url).c_str());
+					eh.get(i::userdata<const char*>));
 				m.remove_handle(eh);
-			} else {
+			}
+			else
+			{
 				fprintf(stderr, "E: CURLMsg (%d)\n", msg.msg);
 			}
 			if (transfers < urls.size()) {
-				fprintf(stderr, "adding url %zd - %s\n",
-					transfers, urls[transfers]);
 				add_transfer(m, urls[transfers++]);
 			}
 		}
-		if (is_alive)
+		if (active > 0)
 		{
 			using namespace std::chrono_literals;
 			m.wait(1s);

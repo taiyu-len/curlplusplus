@@ -7,7 +7,7 @@ namespace curl {
 namespace option { /* curl easy options */
 namespace detail { /* easy_option */
 
-// used to wrap easy option types
+// Used to wrap option types.
 template<CURLoption option, typename T>
 using easy_option = option_base<CURLoption, option, T>;
 
@@ -25,7 +25,8 @@ struct easy_option_enum : public easy_option<option, unsigned long> {
 #define CURL_ENUM_TYPE(NAME, VALUE)  detail::easy_option_enum<CURLOPT_##NAME, VALUE>
 using url             = CURL_OPTION_TYPE(URL, std::string);
 using verbose         = CURL_OPTION_TYPE(VERBOSE, bool);
-using userdata        = CURL_OPTION_TYPE(PRIVATE, void*);
+template<typename T>
+auto userdata(T* x) { return CURL_OPTION_TYPE(PRIVATE, T*){x}; }
 using no_progress     = CURL_OPTION_TYPE(NOPROGRESS, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
 using error_buffer    = CURL_OPTION_TYPE(ERRORBUFFER, curl::error_buffer);
