@@ -37,14 +37,15 @@ public:
 	struct info_read_proxy;
 
 	/** wrapper for curl_multi_info_read.
-	 * @returns an iterable object returning CURLMsg objects
+	 * @returns an iterable object returning curl message objects
 	 */
 	auto info_read() -> info_read_proxy;
 
+	/** wrapper for curl_multi_wait */
 	auto wait(std::chrono::milliseconds) -> int;
 
-	/** Set a curl multi option.
-	 * @pre handle != nullptr
+	/** wrapper for curl_multi_setopt.
+	 * @pre *this
 	 * @throws curl::mcode
 	 */
 	template<CURLMoption o, typename T>
@@ -58,9 +59,8 @@ public:
 	struct socket;
 	struct timer;
 
-	/** Set callback and dataptr from member functions of T.
+	/** wrapper for curl_multi_setopt for functions and data from an object.
 	 * @pre *this
-	 * @requires x->handle(E);
 	 *
 	 * Sets the *FUNCTION and *DATA options in one go.
 	 * if !S emit a compiler error if x->handle(e) is invalid.
@@ -71,35 +71,38 @@ public:
 	inline void set_handler(T *x) noexcept
 	{
 		constexpr auto fptr = extract_mem_fn<Event, T>::fptr();
-		static_assert(NoError || fptr, "Could not find `x->handle(e)`");
+		static_assert(NoError || fptr, "T does not have member function handle(Event)");
 		Event::setopt(handle, fptr, x);
 	}
 
-	/** Set callback from static member function, and dataptr to nullptr.
+	/** wrapper for curl_multi_setopt for function from static member
+	 * functions.
 	 * @pre *this
 	 *
-	 * usage: set_handler<write, T>();
+	 * example: @code set_handler<write, T>(); @endcode
 	 */
 	template<typename Event, typename T>
 	inline void set_handler() noexcept
 	{
 		constexpr auto fptr = extract_static_fn<Event, T>::fptr();
-		static_assert(fptr, "Could not find `T::handle(e)`");
+		static_assert(fptr, "T does not have static member function handle(Event)");
 		Event::setopt(handle, fptr, nullptr);
 	}
 
-	/** Set callback from static member function, and dataptr to param.
+	/** wrapper for curl_multi_setopt for functions and data from static
+	 * member function and data pointer.
+	 *
 	 * @param T Contains static member functions for event.
 	 * @param D Data pointer for event
 	 * @pre *this
 	 *
-	 * usage: set_handler<write, T>(d*);
+	 * example: @code set_handler<write, T>(d*); @endcode
 	 */
 	template<typename Event, typename T, typename D>
 	inline void set_handler(D *x) noexcept
 	{
 		constexpr auto fptr = extract_static_fn_with_data<Event, T, D>::fptr();
-		static_assert(fptr, "Could not find `T::handle(e, d)`");
+		static_assert(fptr, "T does not have static member function handle(Event, D*)");
 		Event::setopt(handle, fptr, x);
 	}
 };
@@ -111,24 +114,32 @@ struct multi_ref::info_read_proxy {
 		using iterator_category = std::forward_iterator_tag;
 		using value_type = CURLMsg;
 		using difference_type = int;
-		using pointer = CURLMsg*;
-		using reference = CURLMsg&;
+		struct message {
+			CURLMSG  msg;
+			easy_ref ref;
+			code     result;
+			void*    whatever;
+			message *operator->() { return this; }
+		};
+		using reference = message;
+		using pointer   = message;
 
 		iterator() noexcept = default;
 		iterator(CURLM *) noexcept;
 
-		bool operator!=(iterator x) noexcept {
+		bool operator!=(iterator x) noexcept
+		{
 			return _message != x._message;
 		}
-		iterator& operator++() noexcept;
-		reference operator*()  noexcept { return *_message; }
-		pointer   operator->() noexcept { return _message; }
-		int remaining() const  noexcept { return _remaining; }
+		auto operator++() noexcept -> iterator&;
+		auto operator*()  noexcept -> message;
+		auto operator->() noexcept -> message { return **this; }
+		auto remaining() const noexcept -> int { return _remaining; }
 
 	private:
-		CURLM* _handle    = nullptr;
-		CURLMsg* _message = nullptr;
-		int _remaining    = 0;
+		CURLM*   _handle    = nullptr;
+		CURLMsg* _message   = nullptr;
+		int      _remaining = 0;
 	};
 	info_read_proxy(CURLM * h): _handle(h) {}
 	auto begin() -> iterator { return {_handle}; }

@@ -7,6 +7,21 @@
 
 namespace curl { // easy_ref
 
+void easy_ref::init()
+{
+	auto tmp = curl_easy_init();
+	if (tmp == nullptr)
+	{
+		throw std::runtime_error("easy_ref failed to initialize");
+	}
+	reset(tmp);
+}
+
+void easy_ref::reset(CURL* h) noexcept
+{
+	curl_easy_cleanup(std::exchange(handle, h));
+}
+
 void easy_ref::pause(curl::pause flag)
 {
 	invoke(curl_easy_pause, handle, static_cast<long>(flag));
@@ -64,12 +79,9 @@ void easy_ref::write::setopt(CURL* handle, signature* fptr, void* data) noexcept
 } // namespace curl
 namespace curl { // easy_handle
 
-easy_handle::easy_handle() : easy_ref(curl_easy_init())
+easy_handle::easy_handle()
 {
-	if (handle == nullptr)
-	{
-		throw std::runtime_error("curl::easy_handle failed to initialize");
-	}
+	init();
 }
 
 easy_handle::easy_handle(easy_handle &&x) noexcept
@@ -78,14 +90,13 @@ easy_handle::easy_handle(easy_handle &&x) noexcept
 
 easy_handle& easy_handle::operator=(easy_handle && x) noexcept
 {
-	curl_easy_cleanup(handle);
-	handle = std::exchange(x.handle, nullptr);
+	reset(std::exchange(x.handle, nullptr));
 	return *this;
 }
 
 easy_handle::~easy_handle() noexcept
 {
-	curl_easy_cleanup(handle);
+	reset();
 }
 
 } // namespace curl

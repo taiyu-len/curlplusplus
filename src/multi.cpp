@@ -63,10 +63,20 @@ iterator::iterator(CURLM* h) noexcept
 	++*this;
 }
 
-iterator& iterator::operator++() noexcept
+auto iterator::operator++() noexcept -> iterator&
 {
 	_message = curl_multi_info_read(_handle, &_remaining);
 	return *this;
+}
+
+auto iterator::operator*() noexcept -> message
+{
+	return {
+		_message->msg,
+		easy_ref(_message->easy_handle),
+		_message->msg == CURLMSG_DONE ? _message->data.result : CURLE_OK,
+		_message->msg == CURLMSG_DONE ? nullptr : _message->data.whatever
+	};
 }
 
 } // namespace curl

@@ -7,29 +7,39 @@
 
 const extern std::vector<const char*> urls;
 
+// handler object for write events. doesnt do anything.
+// could replace with
+//   handle.set_handler([](write w) { return w.size(); });
+// if a gcc bug was fixed and were using c++17
 struct nowrite {
 	static size_t handle(curl::easy_events::write w) {
 		return w.size();
 	}
 };
 
-static void add_transfer(curl::multi_ref cm, const char* url)
+// add a transfer to a multi handle using an existing easy handle.
+static void add_transfer(curl::multi_ref cm, curl::easy_ref ce, const char* url)
 {
-	curl::easy_handle eh;
 	namespace o = curl::option;
 	fprintf(stderr, "Adding url %s\n", url);
-	eh.set(o::url(url));
-	eh.set(o::userdata(url));
-	eh.set_handler<curl::easy_events::write, nowrite>();
-	/* Could be done on clang with c++17. */
-	// eh::set_handle([](eh::write w){ return w.size(); });
+	ce.set(o::url(url));
+	ce.set(o::userdata(url));
+	ce.set_handler<curl::easy_events::write, nowrite>();
+	cm.add_handle(ce);
+}
 
-	cm.add_handle(eh.release());
+// add a transfer to a multi handle by creating a new easy handle.
+static void add_transfer(curl::multi_ref cm, const char* url)
+{
+	curl::easy_ref er;
+	er.init();
+	add_transfer(cm, er, url);
 }
 
 #define MAX_PARALLEL 10
 
 int main(void) {
+	// initialize global and multi handle.
 	auto g = curl::global();
 	auto m = curl::multi_handle();
 	namespace o = curl::option;
@@ -47,32 +57,42 @@ int main(void) {
 	}
 
 	do {
+		// perform transfers, return active connections
 		auto active = m.perform();
-		for (auto &msg : m.info_read())
+		// watch for complete requests
+		for (auto msg : m.info_read())
 		{
+			auto er = msg.ref;
+			// print message when done and remove handle.
 			if (msg.msg == CURLMSG_DONE)
 			{
-				curl::easy_handle eh(msg.easy_handle);
-				curl::code        cc(msg.data.result);
+				auto cc = msg.result;
 				namespace i = curl::info;
 				fprintf(stderr, "R: %d - %s < %s >\n",
 					cc.value, cc.what(),
-					eh.get(i::userdata<const char*>));
-				m.remove_handle(eh);
+					er.get(i::userdata<const char*>));
+				m.remove_handle(er);
 			}
 			else
 			{
 				fprintf(stderr, "E: CURLMsg (%d)\n", msg.msg);
 			}
 			if (transfers < urls.size()) {
-				add_transfer(m, urls[transfers++]);
+				// reuse handle for new transfer
+				add_transfer(m, er, urls[transfers++]);
+			} else {
+				// or cleanup handle if no more transfers
+				er.reset();
 			}
 		}
+		// if we have transfers left wait 1 second or until there is
+		// activity on sockets.
 		if (active > 0)
 		{
 			using namespace std::chrono_literals;
 			m.wait(1s);
 		}
+		// otherwise if we do not have any transfers left to make break.
 		else if (transfers >= urls.size())
 		{
 			break;

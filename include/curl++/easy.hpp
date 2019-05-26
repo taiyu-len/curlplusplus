@@ -20,6 +20,17 @@ public:
 	easy_ref() noexcept = default;
 	easy_ref(CURL *h) noexcept : handle(h) {};
 
+	/** wrapper for curl_easy_init.
+	 * initialize a new handle, and cleanup old handle.
+	 */
+	void init();
+
+	/** wrapper for curl_easy_cleanup.
+	 * Resets the handle to nullptr, or to the given handle.
+	 */
+	void reset(CURL* h) noexcept;
+	void reset() noexcept { reset(nullptr); }
+
 	/// @return handle != nullptr
 	explicit operator bool() const noexcept { return handle; }
 
