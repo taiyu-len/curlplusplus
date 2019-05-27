@@ -16,48 +16,38 @@ namespace curl { // multi_ref
 
 struct multi_ref {
 protected:
-	CURLM* handle = nullptr;
+	CURLM* _handle = nullptr;
 public:
-	multi_ref() noexcept = default;
-	multi_ref(CURLM *) noexcept;
-
-	explicit operator bool() const noexcept { return handle; }
-
-	void add_handle(easy_ref);
-	void remove_handle(easy_ref);
-	void assign(socket_t, void* data);
-	auto perform() -> int;
-
-	/** wrapper for curl_multi_socket_action.
-	 * @return number of running handles.
-	 * @throws curl::mcode
-	 */
-	auto socket_action(socket_t, int ev_bitmask) -> int;
-
+	// an iterable object that produces info_read_messages
 	struct info_read_proxy;
+	struct info_read_message;
 
-	/** wrapper for curl_multi_info_read.
-	 * @returns an iterable object returning curl message objects
-	 */
-	auto info_read() -> info_read_proxy;
-
-	/** wrapper for curl_multi_wait */
-	auto wait(std::chrono::milliseconds) -> int;
-
-	/** wrapper for curl_multi_setopt.
-	 * @pre *this
-	 * @throws curl::mcode
-	 */
-	template<CURLMoption o, typename T>
-	inline void set(option::detail::multi_option<o, T> x)
-	{
-		invoke(curl_multi_setopt, handle, o, x.value);
-	}
-
-	// Multi events
+	// events
 	struct push;
 	struct socket;
 	struct timer;
+
+	multi_ref() noexcept = default;
+	multi_ref(CURLM* h) noexcept : _handle(h) {}
+
+	explicit operator bool() const noexcept { return _handle; }
+
+	void init();
+	void reset(CURLM* = nullptr) noexcept;
+
+	auto info_read() noexcept -> info_read_proxy;
+	auto perform() -> int;
+	auto socket_action(socket_t, int ev_bitmask) -> int;
+	auto wait(std::chrono::milliseconds) -> int;
+	void add_handle(easy_ref);
+	void assign(socket_t, void* data);
+	void remove_handle(easy_ref);
+
+	template<CURLMoption o, typename T>
+	inline void set(option::detail::multi_option<o, T> x)
+	{
+		invoke(curl_multi_setopt, _handle, o, x.value);
+	}
 
 	/** wrapper for curl_multi_setopt for functions and data from an object.
 	 * @pre *this
@@ -72,7 +62,7 @@ public:
 	{
 		constexpr auto fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have member function handle(Event)");
-		Event::setopt(handle, fptr, x);
+		Event::setopt(_handle, fptr, x);
 	}
 
 	/** wrapper for curl_multi_setopt for function from static member
@@ -86,7 +76,7 @@ public:
 	{
 		constexpr auto fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(fptr, "T does not have static member function handle(Event)");
-		Event::setopt(handle, fptr, nullptr);
+		Event::setopt(_handle, fptr, nullptr);
 	}
 
 	/** wrapper for curl_multi_setopt for functions and data from static
@@ -103,26 +93,28 @@ public:
 	{
 		constexpr auto fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "T does not have static member function handle(Event, D*)");
-		Event::setopt(handle, fptr, x);
+		Event::setopt(_handle, fptr, x);
 	}
 };
 
 } // namespace curl
 namespace curl { // multi_ref::info_read_proxy
+
+struct multi_ref::info_read_message {
+	CURLMSG  msg;
+	easy_ref ref;
+	code     result;
+	void*    whatever;
+	auto operator->() -> info_read_message* { return this; }
+};
+
 struct multi_ref::info_read_proxy {
 	struct iterator {
 		using iterator_category = std::forward_iterator_tag;
 		using value_type = CURLMsg;
 		using difference_type = int;
-		struct message {
-			CURLMSG  msg;
-			easy_ref ref;
-			code     result;
-			void*    whatever;
-			message *operator->() { return this; }
-		};
-		using reference = message;
-		using pointer   = message;
+		using reference = multi_ref::info_read_message;
+		using pointer   = multi_ref::info_read_message;
 
 		iterator() noexcept = default;
 		iterator(CURLM *) noexcept;
@@ -132,8 +124,8 @@ struct multi_ref::info_read_proxy {
 			return _message != x._message;
 		}
 		auto operator++() noexcept -> iterator&;
-		auto operator*()  noexcept -> message;
-		auto operator->() noexcept -> message { return **this; }
+		auto operator*()  noexcept -> reference;
+		auto operator->() noexcept -> pointer  { return **this; }
 		auto remaining() const noexcept -> int { return _remaining; }
 
 	private:
@@ -211,19 +203,16 @@ struct multi_ref::timer {
 };
 
 } // namespace curl
-namespace curl { // mutli_handle
+namespace curl { // mutli
 
-struct multi_handle : public multi_ref {
-	/** curl_multi_init.
-	 * @throws std::runtime_error
-	 */
-	multi_handle();
-	~multi_handle() noexcept;
+struct multi : public multi_ref {
+	multi();
+	~multi() noexcept;
 
-	multi_handle(multi_handle &&) noexcept;
-	multi_handle& operator=(multi_handle &&) noexcept;
+	multi(multi &&) noexcept;
+	multi& operator=(multi &&) noexcept;
 private:
-	using multi_ref::handle;
+	using multi_ref::_handle;
 };
 
 } // namespace curl
@@ -233,23 +222,19 @@ namespace curl { // multi
  * @param T the parent type.
  */
 template<typename T>
-struct multi : public multi_handle {
-	multi() noexcept
+struct multi_base : public multi {
+	multi_base() noexcept
 	{
 		// set event handlers conditionally
 		set_handler< push,   true >(self());
 		set_handler< timer,  true >(self());
 		set_handler< socket, true >(self());
 	}
-	/** Read all messages and call handle(message).
-	 *
-	 * calls handle(message{}) from T (or not)
-	 */
-	void info_read_all() noexcept;
+
 private:
 	auto self() noexcept -> T* { return static_cast<T*>(this); }
-	using multi_handle::multi_handle;
-	using multi_handle::set_handler;
+	using multi::multi;
+	using multi::set_handler;
 };
 
 } // namespace curl

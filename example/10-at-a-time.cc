@@ -41,7 +41,7 @@ static void add_transfer(curl::multi_ref cm, const char* url)
 int main(void) {
 	// initialize global and multi handle.
 	auto g = curl::global();
-	auto m = curl::multi_handle();
+	auto m = curl::multi();
 	namespace o = curl::option;
 
 	m.set(o::max_connects{MAX_PARALLEL});

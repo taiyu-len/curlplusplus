@@ -60,6 +60,7 @@ public:
 
 	/// cleanup existing handle and replace it with a new handle.
 	void init();
+
 	/// cleanup existing handle and replace it with given handle.
 	void reset(CURL* = nullptr) noexcept;
 
