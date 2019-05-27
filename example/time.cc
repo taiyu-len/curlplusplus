@@ -2,7 +2,7 @@
 #include <iostream>
 #include <chrono>
 struct nowrite {
-	static size_t handle(curl::easy_events::write w) noexcept
+	static size_t handle(curl::easy::write w) noexcept
 	{
 		return w.size();
 	}
@@ -19,11 +19,10 @@ int main() try
 {
 	namespace o = curl::option;
 	namespace i = curl::info;
-	namespace ev = curl::easy_events;
-	auto request = curl::easy_handle();
+	auto request = curl::easy();
 
 	request.set(o::url("https://www.example.com"));
-	request.set_handler<ev::write, nowrite>();
+	request.set_handler<curl::easy::write, nowrite>();
 	request.perform();
 
 	print_time("namelookup time    = ", request.get(i::namelookup_time));

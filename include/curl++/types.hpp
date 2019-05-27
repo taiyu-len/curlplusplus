@@ -42,14 +42,6 @@ struct ucode : std::exception {
 	CURLUcode value = CURLUE_OK;
 };
 
-/** Flags used for easy::pause(). */
-enum pause : long {
-	recv = CURLPAUSE_RECV,
-	send = CURLPAUSE_SEND,
-	all  = CURLPAUSE_ALL,
-	cont = CURLPAUSE_CONT
-};
-
 } // namespace curl
 
 #endif // CURLPLUSPLUS_TYPES_HPP

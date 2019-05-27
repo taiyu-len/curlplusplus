@@ -11,13 +11,13 @@ multi_ref::multi_ref(CURLM *handle) noexcept
 
 void multi_ref::add_handle(easy_ref ref)
 {
-	CURL* raw_easy_handle = ref.handle;
+	CURL* raw_easy_handle = ref._handle;
 	invoke(curl_multi_add_handle, handle, raw_easy_handle);
 }
 
 void multi_ref::remove_handle(easy_ref ref)
 {
-	CURL* raw_easy_handle = ref.handle;
+	CURL* raw_easy_handle = ref._handle;
 	invoke(curl_multi_remove_handle, handle, raw_easy_handle);
 }
 

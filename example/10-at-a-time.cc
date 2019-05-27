@@ -12,7 +12,7 @@ const extern std::vector<const char*> urls;
 //   handle.set_handler([](write w) { return w.size(); });
 // if a gcc bug was fixed and were using c++17
 struct nowrite {
-	static size_t handle(curl::easy_events::write w) {
+	static size_t handle(curl::easy::write w) {
 		return w.size();
 	}
 };
@@ -24,7 +24,7 @@ static void add_transfer(curl::multi_ref cm, curl::easy_ref ce, const char* url)
 	fprintf(stderr, "Adding url %s\n", url);
 	ce.set(o::url(url));
 	ce.set(o::userdata(url));
-	ce.set_handler<curl::easy_events::write, nowrite>();
+	ce.set_handler<curl::easy::write, nowrite>();
 	cm.add_handle(ce);
 }
 

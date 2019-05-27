@@ -2,7 +2,7 @@
 #include <curl++/global.hpp>
 #include <iostream>
 #include <fstream>
-struct to_file : curl::easy<to_file>
+struct to_file : curl::easy_base<to_file>
 {
 	to_file(const char* url, const char* filename);
 	size_t handle(write w) noexcept;

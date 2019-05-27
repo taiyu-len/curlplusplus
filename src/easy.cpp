@@ -19,21 +19,21 @@ void easy_ref::init()
 
 void easy_ref::reset(CURL* h) noexcept
 {
-	curl_easy_cleanup(std::exchange(handle, h));
+	curl_easy_cleanup(std::exchange(_handle, h));
 }
 
-void easy_ref::pause(curl::pause flag)
+void easy_ref::pause(pause_flags flag)
 {
-	invoke(curl_easy_pause, handle, static_cast<long>(flag));
+	invoke(curl_easy_pause, _handle, static_cast<long>(flag));
 }
 
 void easy_ref::perform()
 {
-	invoke(curl_easy_perform, handle);
+	invoke(curl_easy_perform, _handle);
 }
 
 } // namespace curl
-namespace curl { // curl_ref::events
+namespace curl { // easy_ref::events
 
 namespace { // gets CURLOPTs per event type
 
@@ -79,24 +79,24 @@ void easy_ref::write::setopt(CURL* handle, signature* fptr, void* data) noexcept
 }
 
 } // namespace curl
-namespace curl { // easy_handle
+namespace curl { // easy
 
-easy_handle::easy_handle()
+easy::easy()
 {
 	init();
 }
 
-easy_handle::easy_handle(easy_handle &&x) noexcept
-	: easy_ref(std::exchange(x.handle, nullptr))
+easy::easy(easy &&x) noexcept
+	: easy_ref(std::exchange(x._handle, nullptr))
 {}
 
-auto easy_handle::operator=(easy_handle && x) noexcept -> easy_handle&
+auto easy::operator=(easy && x) noexcept -> easy&
 {
-	reset(std::exchange(x.handle, nullptr));
+	reset(std::exchange(x._handle, nullptr));
 	return *this;
 }
 
-easy_handle::~easy_handle() noexcept
+easy::~easy() noexcept
 {
 	reset();
 }

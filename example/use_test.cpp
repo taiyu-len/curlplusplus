@@ -2,7 +2,7 @@
  */
 #include <curl++/easy.hpp>
 #include <iostream>
-struct print_callbacks : curl::easy<print_callbacks> {
+struct print_callbacks : curl::easy_base<print_callbacks> {
 	print_callbacks() {
 		namespace o = curl::option;
 		set(o::url("www.example.com"));
@@ -40,17 +40,16 @@ struct print_callbacks : curl::easy<print_callbacks> {
 	}
 };
 
-// plain easy_handle case
+// plain easy case
 void plain_usage()
 {
 	namespace o = curl::option;
-	using e = curl::easy_ref;
 	// create a easy handle.
-	auto h = curl::easy_handle();
+	auto h = curl::easy();
 	// setup options
 	h.set(o::url("https://www.example.com"));
-	h.set_handler<e::header, print_callbacks>();
-	h.set_handler<e::write, print_callbacks>();
+	h.set_handler<curl::easy::header, print_callbacks>();
+	h.set_handler<curl::easy::write, print_callbacks>();
 	h.perform();
 }
 

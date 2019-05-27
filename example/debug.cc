@@ -2,7 +2,7 @@
 #include <curl++/global.hpp>
 #include <iostream>
 #include <string>
-struct print_debug : curl::easy<print_debug>
+struct print_debug : curl::easy_base<print_debug>
 {
 	print_debug(std::string url, bool trace_ascii);
 	int handle(debug x) noexcept;
