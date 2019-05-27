@@ -3,80 +3,61 @@
 #include <cstddef>
 #include <iterator>
 namespace curl {
-struct const_buffer {
-	using value_type             = char;
-	using size_type              = std::size_t;
-	using const_iterator         = const char*;
-	using const_pointer          = const char*;
-	using const_reference        = const char&;
+namespace detail {
+/**
+ * Buffer of Ts.
+ */
+template<typename T>
+struct buffer {
+	using value_type = T;
+	using size_type  = std::size_t;
+	using iterator   = T*;
+	using pointer    = T*;
+	using reference  = T&;
 
-	const_buffer(char* p, size_type s) noexcept : _data(p) , _size(s) {}
+	constexpr buffer(T* d, size_type s) noexcept
+	: _data(d)
+	, _size(s)
+	{}
 
-	auto operator[](size_type i) const noexcept -> const_reference
+	constexpr auto operator[](size_type i) const noexcept -> reference
 	{
 		return _data[i];
 	}
-	auto begin() const noexcept -> const_iterator
+
+	constexpr auto begin() const noexcept -> iterator
 	{
 		return _data;
 	}
-	auto end()   const noexcept -> const_iterator
+
+	constexpr auto end() const noexcept -> iterator
 	{
 		return _data + _size;
 	}
 
-	auto empty() const noexcept -> bool
+	constexpr auto empty() const noexcept -> bool
 	{
 		return _size == 0;
 	}
 
-	auto data()  const noexcept -> const_pointer
+	constexpr auto data() const noexcept -> pointer
 	{
 		return _data;
 	}
-	auto size()  const noexcept -> size_type
+
+	constexpr auto size() const noexcept -> size_type
 	{
 		return _size;
 	}
 
 protected:
-	char * _data;
+	T*     _data;
 	size_t _size;
 };
+} // namespace detail
 
-// mutable buffer
-struct buffer : public const_buffer {
-	using value_type             = const_buffer::value_type;
-	using size_type              = const_buffer::size_type;
-	using iterator               = char*;
-	using pointer                = char*;
-	using reference              = char&;
+using const_buffer   = detail::buffer<const char>;
+using mutable_buffer = detail::buffer<char>;
 
-	using const_buffer::const_buffer;
-
-	using const_buffer::operator[];
-	auto operator[](size_type i) noexcept -> reference
-	{
-		return _data[i];
-	}
-
-	using const_buffer::begin;
-	auto begin() noexcept -> iterator
-	{
-		return _data;
-	}
-
-	using const_buffer::end;
-	auto end() noexcept -> iterator
-	{
-		return _data + _size;
-	}
-
-	using const_buffer::data;
-	auto data() noexcept -> pointer
-	{
-		return _data;
-	}
-};
 } // namespace curl
 #endif // CURLPLUSPLUS_BUFFER_HPP

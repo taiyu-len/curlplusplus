@@ -5,81 +5,93 @@
 #include <chrono>
 
 namespace curl {
-namespace info { // info types
-
-/** Base template type for options.
- * @param o the option value.
+namespace info {
+namespace detail {
+/**
+ * Base info type.
+ * @param 1 the info value.
  * @param T the user facing argument type.
  */
-template<CURLINFO o, typename T>
+template<CURLINFO, typename T>
 struct info {
-	using value_type = T;
-	T operator()(T x) const noexcept { return x; }
+	// C-API compatible value type.
+	static auto value() -> T { return T{}; }
+
+	// C-API -> C++ API conversion function
+	static auto convert(T x) -> T
+	{
+		return x;
+	}
 };
 
-template<CURLINFO o>
-struct info<o, std::string> {
-	using value_type = const char*;
-	std::string operator()(const char* x) const noexcept { return x; }
+template<CURLINFO I>
+struct info<I, std::string> {
+	static auto value() -> const char* { return {}; }
+	static auto convert(const char* x) -> std::string
+	{
+		return x;
+	}
 };
 
-template<CURLINFO o>
-struct info<o, bool> {
-	using value_type = long;
-	bool operator()(long x) const noexcept { return static_cast<bool>(x); }
+template<CURLINFO I>
+struct info<I, bool> {
+	static auto value() -> long { return {}; }
+	static auto convert(long x) -> bool
+	{
+		return static_cast<bool>(x);
+	}
 };
 
-template<CURLINFO o, class Rep, class Period>
-struct info<o, std::chrono::duration<Rep, Period>> {
-	using value_type = curl_off_t;
-	std::chrono::duration<Rep, Period> operator()(curl_off_t x) const noexcept
+template<CURLINFO I, class Rep, class Period>
+struct info<I, std::chrono::duration<Rep, Period>> {
+	static auto value() -> curl_off_t { return {}; }
+	static auto convert(curl_off_t x) -> std::chrono::duration<Rep, Period>
 	{
 		return std::chrono::duration<Rep, Period>{x};
 	}
 };
+} // namespace detail
 
-} // namespace info
-namespace info { // info objects
-
-#define CURL_INFO_TYPE(NAME, TYPE) info<CURLINFO_##NAME, TYPE>{}
-constexpr auto url               = CURL_INFO_TYPE(EFFECTIVE_URL, std::string);
+/* Declaration of info variables.
+ * Formatting command.
+s/(\(.*\), \(.*\), \(.*\))/\=printf("(%-24, %-24, %s)", submatch(1), submatch(2), submatch(3))
+ */
+#define CURL_INFO_VAR(NAME, CODE, TYPE) \
+constexpr auto NAME = detail::info<CURLINFO_##CODE, TYPE>{}
+CURL_INFO_VAR(url                     , EFFECTIVE_URL           , std::string);
 // TODO make response code type that can stringify the response and whatnot.
-constexpr auto response_code     = CURL_INFO_TYPE(RESPONSE_CODE, long);
-constexpr auto http_connect_code = CURL_INFO_TYPE(HTTP_CONNECTCODE, long);
-constexpr auto http_version      = CURL_INFO_TYPE(HTTP_VERSION, long);
+CURL_INFO_VAR(response_code           , RESPONSE_CODE           , long);
+CURL_INFO_VAR(http_connect_code       , HTTP_CONNECTCODE        , long);
+CURL_INFO_VAR(http_version            , HTTP_VERSION            , long);
 
-constexpr auto redirect_count    = CURL_INFO_TYPE(REDIRECT_COUNT, long);
-constexpr auto redirect_url      = CURL_INFO_TYPE(REDIRECT_URL, std::string);
+CURL_INFO_VAR(redirect_count          , REDIRECT_COUNT          , long);
+CURL_INFO_VAR(redirect_url            , REDIRECT_URL            , std::string);
 // bytes
-constexpr auto size_upload       = CURL_INFO_TYPE(SIZE_UPLOAD_T, curl_off_t);
-constexpr auto size_download     = CURL_INFO_TYPE(SIZE_DOWNLOAD_T, curl_off_t);
-
+CURL_INFO_VAR(size_upload             , SIZE_UPLOAD_T           , curl_off_t);
+CURL_INFO_VAR(size_download           , SIZE_DOWNLOAD_T         , curl_off_t);
 // bytes per second
-constexpr auto speed_upload      = CURL_INFO_TYPE(SPEED_UPLOAD_T, curl_off_t);
-constexpr auto speed_download    = CURL_INFO_TYPE(SPEED_DOWNLOAD_T, curl_off_t);
-constexpr auto header_size       = CURL_INFO_TYPE(HEADER_SIZE, long);
-constexpr auto request_size      = CURL_INFO_TYPE(REQUEST_SIZE, long);
-
-constexpr auto content_length_download = CURL_INFO_TYPE(CONTENT_LENGTH_DOWNLOAD_T, curl_off_t);
-constexpr auto content_length_upload   = CURL_INFO_TYPE(CONTENT_LENGTH_UPLOAD_T, curl_off_t);
-
-constexpr auto content_type       = CURL_INFO_TYPE(CONTENT_TYPE, std::string);
-
+CURL_INFO_VAR(speed_upload            , SPEED_UPLOAD_T          , curl_off_t);
+CURL_INFO_VAR(speed_download          , SPEED_DOWNLOAD_T        , curl_off_t);
+CURL_INFO_VAR(header_size             , HEADER_SIZE             , long);
+CURL_INFO_VAR(request_size            , REQUEST_SIZE            , long);
+// Bytes
+CURL_INFO_VAR(content_length_download , CONTENT_LENGTH_DOWNLOAD_T, curl_off_t);
+CURL_INFO_VAR(content_length_upload   , CONTENT_LENGTH_UPLOAD_T , curl_off_t);
+CURL_INFO_VAR(content_type            , CONTENT_TYPE            , std::string);
 // T should be a pointer.
 template<typename T>
-constexpr auto userdata = CURL_INFO_TYPE(PRIVATE, T);
-
+CURL_INFO_VAR(userdata                , PRIVATE                 , T);
 // TODO rather then a duration, a timepoint may be better
-constexpr auto filetime           = CURL_INFO_TYPE(FILETIME_T, std::chrono::seconds);
-
-constexpr auto total_time         = CURL_INFO_TYPE(TOTAL_TIME_T,         std::chrono::microseconds);
-constexpr auto namelookup_time    = CURL_INFO_TYPE(NAMELOOKUP_TIME_T,    std::chrono::microseconds);
-constexpr auto connect_time       = CURL_INFO_TYPE(CONNECT_TIME_T,       std::chrono::microseconds);
-constexpr auto appconnect_time    = CURL_INFO_TYPE(APPCONNECT_TIME_T,    std::chrono::microseconds);
-constexpr auto pretransfer_time   = CURL_INFO_TYPE(PRETRANSFER_TIME_T,   std::chrono::microseconds);
-constexpr auto starttransfer_time = CURL_INFO_TYPE(STARTTRANSFER_TIME_T, std::chrono::microseconds);
-constexpr auto redirect_time      = CURL_INFO_TYPE(REDIRECT_TIME_T,      std::chrono::microseconds);
-#undef CURL_INFO_TYPE
+CURL_INFO_VAR(filetime                , FILETIME_T              , std::chrono::seconds);
+// Timings
+CURL_INFO_VAR(total_time              , TOTAL_TIME_T            , std::chrono::microseconds);
+CURL_INFO_VAR(namelookup_time         , NAMELOOKUP_TIME_T       , std::chrono::microseconds);
+CURL_INFO_VAR(connect_time            , CONNECT_TIME_T          , std::chrono::microseconds);
+CURL_INFO_VAR(appconnect_time         , APPCONNECT_TIME_T       , std::chrono::microseconds);
+CURL_INFO_VAR(pretransfer_time        , PRETRANSFER_TIME_T      , std::chrono::microseconds);
+CURL_INFO_VAR(starttransfer_time      , STARTTRANSFER_TIME_T    , std::chrono::microseconds);
+CURL_INFO_VAR(redirect_time           , REDIRECT_TIME_T         , std::chrono::microseconds);
+#undef CURL_INFO_VAR
 
 } // namespace info
 } // namespace curl

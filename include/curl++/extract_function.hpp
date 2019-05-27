@@ -4,10 +4,10 @@
 #include <type_traits>
 #include <utility>
 namespace curl {
+namespace detail {
 
-namespace detail { // invoke_handler
-
-/** Provides static functions to handle events in a variety of methods.
+/**
+ * Provides static functions to handle events in a variety of methods.
  * @param E the event being handled.
  * @param 2 The event signature.
  */

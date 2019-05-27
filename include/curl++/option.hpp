@@ -5,7 +5,40 @@
 #include <string>
 namespace curl {
 namespace option {
-namespace detail { /* option_base specializations */
+namespace detail {
+/**
+ * Extract function pointer for default callback if it exists.
+ */
+template<typename T, typename = void>
+struct get_default {
+	static constexpr auto fptr() noexcept -> typename T::signature*
+	{
+		return nullptr;
+	}
+};
+
+template<typename T>
+struct get_default<T, decltype(void(&T::DEFAULT))> {
+	static constexpr auto fptr() noexcept -> typename T::signature*
+	{
+		return &T::DEFAULT;
+	}
+};
+
+template<typename T>
+void easy_setopt(CURL* handle, typename T::signature* fp, void* dp) noexcept
+{
+	curl_easy_setopt(handle, T::FUNC, fp ? fp : get_default<T>::fptr());
+	curl_easy_setopt(handle, T::DATA, fp ? dp : NULL);
+}
+
+template<typename T>
+void multi_setopt(CURLM* handle, typename T::signature* fp, void* dp) noexcept
+{
+	curl_multi_setopt(handle, T::FUNC, fp ? fp : get_default<T>::fptr());
+	curl_multi_setopt(handle, T::DATA, fp ? dp : NULL);
+}
+/* option_base specializations */
 
 struct bit_flag_option {};
 
