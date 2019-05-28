@@ -110,9 +110,23 @@ public:
 	 * @pre *this
 	 */
 	template<CURLoption o, typename T>
-	inline void set(option::detail::easy_option<o, T> x)
+	void set(option::detail::easy_option<o, T> x)
 	{
 		invoke(curl_easy_setopt, _handle, o, x.value);
+	}
+
+	/**
+	 * see curl_easy_setopt.
+	 * set option manually.
+	 *
+	 * @warning Not type safe. avoid this
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	template<typename T>
+	void set(CURLoption o, T x)
+	{
+		invoke(curl_easy_setopt, _handle, o, x);
 	}
 
 	/**
@@ -124,7 +138,7 @@ public:
 	 * @pre *this
 	 */
 	template<CURLINFO I, typename T>
-	inline auto get(info::detail::info<I, T> x) const -> T
+	auto get(info::detail::info<I, T> x) const -> T
 	{
 		auto y = x.value();
 		invoke(curl_easy_getinfo, _handle, I, &y);
@@ -150,7 +164,7 @@ public:
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have member function `handle(Event)`");
-		option::detail::easy_setopt<Event>(_handle, fptr, x);
+		option::detail::setopt<Event>(*this, fptr, x);
 	}
 
 	/**
@@ -164,7 +178,7 @@ public:
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have static member function `handle(Event)`");
-		option::detail::easy_setopt<Event>(_handle, fptr, nullptr);
+		option::detail::setopt<Event>(*this, fptr, nullptr);
 	}
 
 	/**
@@ -178,7 +192,7 @@ public:
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "T does not have static member function `handle(Event, D*)`");
-		option::detail::easy_setopt<Event>(_handle, fptr, x);
+		option::detail::setopt<Event>(*this, fptr, x);
 	}
 #if 0
 	/**
@@ -198,7 +212,7 @@ public:
 	{
 		constexpr auto fptr = +x;
 		constexpr fptr_t fptr = extract_fptr<fptr>::fptr();
-		option::detail::easy_setopt<Event>(_handle, fptr, nullptr);
+		option::detail::setopt<Event>(*this, fptr, nullptr);
 	}
 
 	/**
@@ -208,11 +222,11 @@ public:
 	template<typename T, typename D,
 		typename F = decltype(+std::declval<T>()),
 		F x = +std::declval<T>()>
-	inline void set_handle(T x, D* y) noexcept
+	void set_handle(T x, D* y) noexcept
 	{
 		constexpr auto fptr = +x;
 		constexpr fptr_t fptr = extract_fptr_with_data<fptr, D>::fptr();
-		option::detail::easy_setopt<Event>(_handle, fptr, y);
+		option::detail::setopt<Event>(*this, fptr, y);
 	}
 #endif
 };

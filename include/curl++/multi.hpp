@@ -169,6 +169,19 @@ public:
 		invoke(curl_multi_setopt, _handle, o, x.value);
 	}
 
+	/**
+	 * see curl_multi_setopt
+	 *
+	 * @warning not type safe, avoid this
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	template<typename T>
+	void set(CURLMoption o, T x)
+	{
+		invoke(curl_multi_setopt, _handle, o, x);
+	}
+
 	/** wrapper for curl_multi_setopt for functions and data from an object.
 	 * @pre *this
 	 *
@@ -182,7 +195,7 @@ public:
 	{
 		constexpr auto fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have member function handle(Event)");
-		Event::setopt(_handle, fptr, x);
+		option::detail::setopt<Event>(*this, fptr, x);
 	}
 
 	/** wrapper for curl_multi_setopt for function from static member
@@ -196,7 +209,7 @@ public:
 	{
 		constexpr auto fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(fptr, "T does not have static member function handle(Event)");
-		Event::setopt(_handle, fptr, nullptr);
+		option::detail::setopt<Event>(*this, fptr, nullptr);
 	}
 
 	/** wrapper for curl_multi_setopt for functions and data from static
@@ -213,7 +226,7 @@ public:
 	{
 		constexpr auto fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "T does not have static member function handle(Event, D*)");
-		Event::setopt(_handle, fptr, x);
+		option::detail::setopt<Event>(*this, fptr, x);
 	}
 };
 

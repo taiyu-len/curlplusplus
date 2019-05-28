@@ -25,19 +25,13 @@ struct get_default<T, decltype(void(&T::DEFAULT))> {
 	}
 };
 
-template<typename T>
-void easy_setopt(CURL* handle, typename T::signature* fp, void* dp) noexcept
+template<typename E, typename T>
+void setopt(T& handle, typename E::signature* fp, void* dp) noexcept
 {
-	curl_easy_setopt(handle, T::FUNC, fp ? fp : get_default<T>::fptr());
-	curl_easy_setopt(handle, T::DATA, fp ? dp : NULL);
+	handle.set(E::FUNC, fp ? fp : get_default<E>::fptr());
+	handle.set(E::DATA, fp ? dp : nullptr);
 }
 
-template<typename T>
-void multi_setopt(CURLM* handle, typename T::signature* fp, void* dp) noexcept
-{
-	curl_multi_setopt(handle, T::FUNC, fp ? fp : get_default<T>::fptr());
-	curl_multi_setopt(handle, T::DATA, fp ? dp : NULL);
-}
 /* option_base specializations */
 
 struct bit_flag_option {};
