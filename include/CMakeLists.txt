@@ -1,4 +1,4 @@
-set_property(TARGET curl++ PROPERTY PUBLIC_HEADER
+set_property(TARGET curl++ PROPERTY INTERFACE_PUBLIC_HEADER
 	curl++/buffer.hpp
 	curl++/detail/extract_function.hpp
 	curl++/easy.hpp
@@ -11,4 +11,3 @@ set_property(TARGET curl++ PROPERTY PUBLIC_HEADER
 	curl++/option.hpp
 	curl++/types.hpp
 )
-target_include_directories(curl++ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

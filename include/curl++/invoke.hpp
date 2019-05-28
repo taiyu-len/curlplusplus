@@ -2,11 +2,6 @@
 #define CURLPLUSPLUS_INVOKE_HPP
 #include "curl++/types.hpp"
 namespace curl {
-inline auto to_code(CURLcode c)   noexcept -> curl::code   { return c; }
-inline auto to_code(CURLMcode c)  noexcept -> curl::mcode  { return c; }
-inline auto to_code(CURLSHcode c) noexcept -> curl::shcode { return c; }
-inline auto to_code(CURLUcode c)  noexcept -> curl::ucode  { return c; }
-
 /**
  * Utility function to wrap curl function calls to handle errors appropriatly.
  */
