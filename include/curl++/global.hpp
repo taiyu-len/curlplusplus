@@ -1,10 +1,10 @@
 #ifndef CURLPLUSPLUS_GLOBAL_HPP
 #define CURLPLUSPLUS_GLOBAL_HPP
+#include "curl++/invoke.hpp"
 #include <curl/curl.h>
 namespace curl {
-/** RAII wrapper around curl global state.
- *
- * see curl_global_init, curl_global_cleanup
+/**
+ * RAII wrapper around curl global state.
  */
 struct global {
 	/** Bit flags used to initialize curl global state. */
@@ -17,18 +17,20 @@ struct global {
 		ACK_EINTER = CURL_GLOBAL_ACK_EINTR
 	};
 
-	//@{
 	/** Initialize curl global state with given flags.
 	 *
-	 * @param f flags passed to curl_global_init
-	 * @throws std::runtime_error if initialization failed
+	 * @throws curl::code if initialization failed
 	 */
-	global(flags f);
-	global();
-	//@}
+	global(flags f = DEFAULT)
+	{
+		invoke(curl_global_init, f);
+	}
 
 	/** Cleans up curl global state. */
-	~global() noexcept;
+	~global() noexcept
+	{
+		curl_global_cleanup();
+	}
 };
 } // namespace curl
 #endif // CURLPLUSPLUS_GLOBAL_HPP

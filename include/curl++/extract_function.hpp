@@ -8,8 +8,9 @@ namespace detail {
 
 /**
  * Provides static functions to handle events in a variety of methods.
+ *
  * @param E the event being handled.
- * @param 2 The event signature.
+ * @param 2 The function signature for the event.
  */
 template<typename E, typename = typename E::signature>
 struct invoke_handler;
@@ -56,20 +57,19 @@ struct invoke_handler<E, R(Args...)> {
 #endif
 };
 
-// detects t.handle(e);
+/// detects t.handle(e);
 template<typename E, typename T>
 using detect_mem_fn = decltype(std::declval<T>().handle(std::declval<E>()), void());
 
-// detects T::handle(e);
+/// detects T::handle(e);
 template<typename E, typename T>
 using detect_static_fn = decltype(T::handle(std::declval<E>()), void());
 
-// detects T::handle(e, &d);
+/// detects T::handle(e, &d);
 template<typename E, typename T, typename D>
 using detect_static_fn_with_data = decltype(T::handle(std::declval<E>(), std::declval<D*>()), void());
 
-// default extractor
-
+// Default extractor returning nullptr
 template<typename E>
 struct extract_default {
 	static constexpr
@@ -90,9 +90,9 @@ struct extract_static_fn : detail::extract_default<E> {};
 template<typename E, typename T, typename D, typename = void>
 struct extract_static_fn_with_data : detail::extract_default<E> {};
 
-//
-// specializations
-//
+/*
+ * Specializations
+ */
 
 template<typename E, typename T>
 struct extract_mem_fn<E, T, detail::detect_mem_fn<E, T>> {

@@ -265,7 +265,13 @@ struct easy : public easy_ref {
 		reset();
 	}
 
-	auto release() -> easy_ref { return std::exchange(_handle, nullptr); }
+	/**
+	 * Release owner ship of easy handle and return non-owning handle.
+	 */
+	auto release() -> easy_ref
+	{
+		return std::exchange(_handle, nullptr);
+	}
 private:
 	// hide raw handle from inheriting types.
 	using easy_ref::_handle;
@@ -305,7 +311,7 @@ private:
 protected:
 	using easy::set_handler;
 };
-} // namespace curl
 
+} // namespace curl
 #include "curl++/detail/easy_events.hpp"
 #endif // CURLPLUSPLUS_EASY_HPP
