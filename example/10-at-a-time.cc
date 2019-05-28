@@ -12,7 +12,7 @@ const extern std::vector<const char*> urls;
 //   handle.set_handler([](write w) { return w.size(); });
 // if a gcc bug was fixed and were using c++17
 struct nowrite {
-	static size_t handle(curl::easy::write w) {
+	static size_t on(curl::easy::write w) {
 		return w.size();
 	}
 };
@@ -117,6 +117,7 @@ const std::vector<const char*> urls =
 	"https://www.amazon.com",
 	"https://www.netcraft.com",
 	"https://www.heise.de",
+/*
 	"https://www.chip.de",
 	"https://www.ca.com",
 	"https://www.cnet.com",
@@ -152,4 +153,5 @@ const std::vector<const char*> urls =
 	"https://www.informationweek.com",
 	"https://apache.org",
 	"https://www.un.org",
+*/
 };

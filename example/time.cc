@@ -2,7 +2,7 @@
 #include <curl++/easy.hpp>
 #include <iostream>
 struct nowrite {
-	static size_t handle(curl::easy::write w) noexcept
+	static size_t on(curl::easy::write w) noexcept
 	{
 		return w.size();
 	}

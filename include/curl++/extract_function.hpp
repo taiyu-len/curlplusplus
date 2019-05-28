@@ -20,14 +20,14 @@ struct invoke_handler<E, R(Args...)> {
 	{
 		auto event = E(args...);
 		auto state = static_cast<T*>(E::dataptr(args...));
-		return state->handle(event);
+		return state->on(event);
 	}
 
 	template<typename T>
 	static auto invoke_static_fn(Args... args) -> R
 	{
 		auto event = E(args...);
-		return T::handle(event);
+		return T::on(event);
 	}
 
 	template<typename T, typename D>
@@ -35,7 +35,7 @@ struct invoke_handler<E, R(Args...)> {
 	{
 		auto event = E(args...);
 		auto state = static_cast<D*>(E::dataptr(args...));
-		return T::handle(event, state);
+		return T::on(event, state);
 	}
 #if 0
 	template<auto fptr>
@@ -59,17 +59,17 @@ struct invoke_handler<E, R(Args...)> {
  * Detectors
  */
 
-/// detects t.handle(e);
+/// detects t.on(e);
 template<typename E, typename T>
-using detect_mem_fn = decltype(std::declval<T>().handle(std::declval<E>()), void());
+using detect_mem_fn = decltype(std::declval<T>().on(std::declval<E>()), void());
 
-/// detects T::handle(e);
+/// detects T::on(e);
 template<typename E, typename T>
-using detect_static_fn = decltype(T::handle(std::declval<E>()), void());
+using detect_static_fn = decltype(T::on(std::declval<E>()), void());
 
-/// detects T::handle(e, &d);
+/// detects T::on(e, &d);
 template<typename E, typename T, typename D>
-using detect_static_fn_with_data = decltype(T::handle(std::declval<E>(), std::declval<D*>()), void());
+using detect_static_fn_with_data = decltype(T::on(std::declval<E>(), std::declval<D*>()), void());
 
 /*
  * Default Extractor types returning nullptr
@@ -186,7 +186,7 @@ struct set_handler_base {
 	 * Safely sets both the FUNCTION and DATA options for the specified
 	 * event in one go.
 	 *
-	 * if NoError == false, then emit a compiler error if the handle
+	 * if NoError == false, then emit a compiler error if the on
 	 * function doesnt exist.
 	 */
 	template<typename Event, bool NoError = false, typename T>
@@ -194,7 +194,7 @@ struct set_handler_base {
 	{
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_mem_fn<Event, T>::fptr();
-		static_assert(NoError || fptr, "T does not have member function `handle(Event)`");
+		static_assert(NoError || fptr, "T does not have member function `on(Event)`");
 		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
 		self().set(Event::DATA, fptr ? x    : nullptr);
 	}
@@ -209,7 +209,7 @@ struct set_handler_base {
 	{
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn<Event, T>::fptr();
-		static_assert(NoError || fptr, "T does not have static member function `handle(Event)`");
+		static_assert(NoError || fptr, "T does not have static member function `on(Event)`");
 		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
 		self().set(Event::DATA, nullptr);
 	}
@@ -224,7 +224,7 @@ struct set_handler_base {
 	{
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn_with_data<Event, T, D>::fptr();
-		static_assert(fptr, "T does not have static member function `handle(Event, D*)`");
+		static_assert(fptr, "T does not have static member function `on(Event, D*)`");
 		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
 		self().set(Event::DATA, fptr ? x    : nullptr);
 	}

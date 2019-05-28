@@ -5,7 +5,7 @@
 struct to_file : curl::easy_base<to_file>
 {
 	to_file(const char* url, const char* filename);
-	size_t handle(write w) noexcept;
+	size_t on(write w) noexcept;
 private:
 	std::ofstream stream;
 };
@@ -41,7 +41,7 @@ to_file::to_file(const char* url, const char* filename)
 	set(o::verbose(true));
 	set(o::error_buffer(ebuffer));
 }
-size_t to_file::handle(write w) noexcept
+size_t to_file::on(write w) noexcept
 {
 	stream.write(w.data(), w.size());
 	return stream ? w.size() : 0;

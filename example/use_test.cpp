@@ -9,28 +9,28 @@ struct print_callbacks : curl::easy_base<print_callbacks> {
 		set(o::verbose(true));
 		set(o::no_progress(false));
 	}
-	static size_t handle(write w) {
+	static size_t on(write w) {
 		std::cout << "called write   : received " << w.size() << '\n';
 		return w.size();
 	}
-	static size_t handle(header w) {
+	static size_t on(header w) {
 		std::cout << "called header  : recieved " << w.size() << '\n';
 		printf("    %*s", int(w.size()), w.data());
 		return w.size();
 	}
-	static size_t handle(read w) {
+	static size_t on(read w) {
 		std::cout << "called read    : " << w.size() << '\n';
 		return w.size();
 	}
-	static int handle(seek) {
+	static int on(seek) {
 		std::cout << "called seek    :\n";
 		return CURL_SEEKFUNC_OK;
 	}
-	static int handle(debug) {
+	static int on(debug) {
 		std::cout << "called debug   :\n";
 		return 0;
 	}
-	static int handle(progress p) {
+	static int on(progress p) {
 		std::cout << "called progress:\n";
 		std::cout << "    dltotal = " << p.dltotal;
 		std::cout << "    dlnow = " << p.dlnow << '\n';

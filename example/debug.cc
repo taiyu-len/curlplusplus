@@ -5,9 +5,9 @@
 struct print_debug : curl::easy_base<print_debug>
 {
 	print_debug(std::string const&url, bool trace_ascii);
-	int handle(debug x) noexcept;
+	int on(debug x) noexcept;
 private:
-	void dump(const char* text, FILE*, const char*, size_t);
+	void dump(const char* text, FILE*, const unsigned char*, size_t);
 	bool no_hex;
 };
 
@@ -37,7 +37,7 @@ print_debug::print_debug(std::string const& url, bool trace_ascii)
 	set(o::error_buffer(ebuffer));
 }
 
-int print_debug::handle(debug x) noexcept
+int print_debug::on(debug x) noexcept
 {
 	const char *text;
 	switch(x.type)
@@ -67,11 +67,11 @@ int print_debug::handle(debug x) noexcept
 		break;
 	}
 
-	dump(text, stderr, x.data(), x.size());
+	dump(text, stderr, (unsigned char*)x.data(), x.size());
 	return 0;
 }
 
-void print_debug::dump(const char* text, FILE* stream, const char* ptr, size_t size)
+void print_debug::dump(const char* text, FILE* stream, const unsigned char* ptr, size_t size)
 {
 	// fit more on screen if we only show ascii
 	const auto width = no_hex ? 0x40UL : 0x10UL;
