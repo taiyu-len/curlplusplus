@@ -1,7 +1,7 @@
 #include <curl++/easy.hpp>
-#include <iostream>
 #include <exception>
-int main(void) try
+#include <iostream>
+int main() try
 {
 	namespace o = curl::option;
 	namespace i = curl::info;

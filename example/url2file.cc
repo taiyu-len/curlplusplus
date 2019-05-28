@@ -1,7 +1,7 @@
 #include <curl++/easy.hpp>
 #include <curl++/global.hpp>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 struct to_file : curl::easy_base<to_file>
 {
 	to_file(const char* url, const char* filename);

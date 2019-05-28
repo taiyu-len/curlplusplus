@@ -38,7 +38,7 @@ struct code_template : std::exception {
 };
 
 // curl doesnt provide this for some reason.
-const char* url_strerror(CURLUcode value) {
+inline const char* url_strerror(CURLUcode value) {
 	switch (value) {
 	case CURLUE_BAD_HANDLE:
 		return "An argument that should be a CURLU pointer was passed in as a NULL.";

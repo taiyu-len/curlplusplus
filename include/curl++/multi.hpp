@@ -46,7 +46,7 @@ public:
 	 */
 	explicit operator bool() const noexcept
 	{
-		return _handle;
+		return _handle != nullptr;
 	}
 
 	/**
@@ -202,6 +202,10 @@ struct multi : public multi_ref {
 	{
 		reset();
 	}
+
+	multi(easy const&) = delete;
+	auto operator=(multi const&) -> multi& = delete;
+
 
 	/**
 	 * Transfer ownership

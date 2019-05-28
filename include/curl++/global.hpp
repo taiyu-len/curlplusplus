@@ -21,7 +21,7 @@ struct global {
 	 *
 	 * @throws curl::code if initialization failed
 	 */
-	global(flags f = DEFAULT)
+	explicit global(flags f = DEFAULT)
 	{
 		invoke(curl_global_init, f);
 	}

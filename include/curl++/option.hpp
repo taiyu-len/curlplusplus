@@ -62,7 +62,7 @@ struct option_base<O, option, bit_flag_option>
 template<typename O, O option>
 struct option_base<O, option, curl::error_buffer>
 {
-	explicit option_base(curl::error_buffer& x):value(x.data()) {};
+	explicit option_base(curl::error_buffer& x):value(&x[0]) {};
 	char* value;
 };
 

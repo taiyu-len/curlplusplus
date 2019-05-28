@@ -1,9 +1,9 @@
 #include "curl++/easy.hpp"
-#include "curl++/multi.hpp"
 #include "curl++/global.hpp"
-#include <vector>
-#include <iostream>
+#include "curl++/multi.hpp"
 #include <chrono>
+#include <iostream>
+#include <vector>
 
 const extern std::vector<const char*> urls;
 
@@ -36,9 +36,9 @@ static void add_transfer(curl::multi_ref cm, const char* url)
 	add_transfer(cm, er, url);
 }
 
-#define MAX_PARALLEL 10
+constexpr auto MAX_PARALLEL = 10;
 
-int main(void) {
+int main() try {
 	// initialize global and multi handle.
 	auto g = curl::global();
 	auto m = curl::multi();
@@ -98,6 +98,9 @@ int main(void) {
 			break;
 		}
 	} while (true);
+} catch (std::exception const& e) {
+	fprintf(stderr, "%s\n", e.what());
+	return 1;
 }
 
 const std::vector<const char*> urls =

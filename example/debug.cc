@@ -4,15 +4,15 @@
 #include <string>
 struct print_debug : curl::easy_base<print_debug>
 {
-	print_debug(std::string url, bool trace_ascii);
+	print_debug(std::string const&url, bool trace_ascii);
 	int handle(debug x) noexcept;
 private:
-	void dump(const char* text, FILE*, unsigned char*, size_t);
+	void dump(const char* text, FILE*, const char*, size_t);
 	bool no_hex;
 };
 
 static curl::error_buffer ebuffer;
-int main(void) try
+int main() try
 {
 	auto g = curl::global{};
 	auto request = print_debug{"https://example.com", true};
@@ -25,7 +25,7 @@ catch (std::exception const& e)
 	return 1;
 }
 
-print_debug::print_debug(std::string url, bool trace_ascii)
+print_debug::print_debug(std::string const& url, bool trace_ascii)
 : no_hex(trace_ascii)
 {
 	namespace o = curl::option;
@@ -67,14 +67,14 @@ int print_debug::handle(debug x) noexcept
 		break;
 	}
 
-	dump(text, stderr, (unsigned char*)(x.data()), x.size());
+	dump(text, stderr, x.data(), x.size());
 	return 0;
 }
 
-void print_debug::dump(const char* text, FILE* stream, unsigned char* ptr, size_t size)
+void print_debug::dump(const char* text, FILE* stream, const char* ptr, size_t size)
 {
 	// fit more on screen if we only show ascii
-	const auto width = no_hex ? 0x40ul : 0x10ul;
+	const auto width = no_hex ? 0x40UL : 0x10UL;
 	const auto is_0D0A = [&](size_t i)
 	{
 		return no_hex && (i+1 < size)

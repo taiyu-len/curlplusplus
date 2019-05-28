@@ -1,6 +1,6 @@
+#include <chrono>
 #include <curl++/easy.hpp>
 #include <iostream>
-#include <chrono>
 struct nowrite {
 	static size_t handle(curl::easy::write w) noexcept
 	{

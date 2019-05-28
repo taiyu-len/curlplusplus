@@ -50,7 +50,7 @@ struct buffer {
 		return _size;
 	}
 
-protected:
+private:
 	T*     _data;
 	size_t _size;
 };

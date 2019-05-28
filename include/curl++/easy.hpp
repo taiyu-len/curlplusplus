@@ -1,8 +1,8 @@
 #ifndef CURLPLUSPLUS_EASY_HPP
 #define CURLPLUSPLUS_EASY_HPP
 #include "curl++/easy_info.hpp"
-#include "curl++/extract_function.hpp"
 #include "curl++/easy_opt.hpp"
+#include "curl++/extract_function.hpp"
 #include "curl++/invoke.hpp"
 #include "curl++/option.hpp" // for handler
 #include "curl++/types.hpp"
@@ -70,7 +70,7 @@ public:
 	 */
 	void init()
 	{
-		if (_handle) {
+		if (_handle != nullptr) {
 			curl_easy_reset(_handle);
 		} else {
 			_handle = curl_easy_init();
@@ -169,6 +169,9 @@ struct easy : public easy_ref {
 	: easy_ref(er)
 	{};
 
+	easy(easy const&) = delete;
+	auto operator=(easy const&) -> easy& = delete;
+
 	/**
 	 * Transfer ownership from given handle to this one.
 	 */
@@ -180,7 +183,7 @@ struct easy : public easy_ref {
 	 * Transfer ownership from given handle to this one.
 	 * Cleans up existing handle.
 	 */
-	easy& operator=(easy&& x) noexcept
+	auto operator=(easy&& x) noexcept -> easy&
 	{
 		reset(std::exchange(x._handle, nullptr));
 		return *this;
@@ -197,7 +200,7 @@ struct easy : public easy_ref {
 	/**
 	 * Release owner ship of easy handle and return non-owning handle.
 	 */
-	auto release() -> easy_ref
+	auto release() noexcept -> easy_ref
 	{
 		return std::exchange(_handle, nullptr);
 	}
@@ -231,9 +234,6 @@ private:
 	{
 		return static_cast<T*>(this);
 	}
-
-	// prevent slicing
-	operator easy() = delete;
 
 	using easy::easy;
 

@@ -1,8 +1,8 @@
 #ifndef CURLPLUSPLUS_EASY_INFO_HPP
 #define CURLPLUSPLUS_EASY_INFO_HPP
+#include <chrono>
 #include <curl/curl.h>   // for CURLINFO*
 #include <string>
-#include <chrono>
 
 namespace curl {
 namespace info {

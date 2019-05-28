@@ -1,6 +1,6 @@
 #include <curl++/easy.hpp>
-#include <iostream>
 #include <exception>
+#include <iostream>
 int main() try
 {
 	namespace o = curl::option;
