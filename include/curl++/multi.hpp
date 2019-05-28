@@ -1,6 +1,7 @@
 #ifndef CURLPLUSPLUS_MULTI_HPP
 #define CURLPLUSPLUS_MULTI_HPP
 #include "curl++/easy.hpp"        // for easy_ref
+#include "curl++/info_read.hpp"
 #include "curl++/invoke.hpp"
 #include "curl++/multi_opt.hpp"
 #include "curl++/option.hpp"      // for handler
@@ -8,43 +9,162 @@
 #include <chrono>                 // for milliseconds
 #include <curl/curl.h>
 #include <iterator>
-namespace curl { // multi_ref
+#include <utility>
+
+namespace curl {
 
 // TODO lots of work refining the usage of this class.
 // as it is now its a very light wrapper over the c-api and exposes raw bits
 // here and there.
 
+/**
+ * Non-owning wrapper for a curl multi handle.
+ */
 struct multi_ref {
 protected:
 	CURLM* _handle = nullptr;
 public:
-	// an iterable object that produces info_read_messages
-	struct info_read_proxy;
-	struct info_read_message;
-
 	// events
 	struct push;
 	struct socket;
 	struct timer;
 
+	/**
+	 * Default constuct empty handle.
+	 */
 	multi_ref() noexcept = default;
-	multi_ref(CURLM* h) noexcept : _handle(h) {}
 
-	explicit operator bool() const noexcept { return _handle; }
+	/**
+	 * Construct with given raw handle.
+	 */
+	multi_ref(CURLM* h) noexcept
+	: _handle(h)
+	{}
 
-	void init();
-	void reset(CURLM* = nullptr) noexcept;
+	/**
+	 * @return true iff handle is valid.
+	 */
+	explicit operator bool() const noexcept
+	{
+		return _handle;
+	}
 
-	auto info_read() noexcept -> info_read_proxy;
-	auto perform() -> int;
-	auto socket_action(socket_t, int ev_bitmask) -> int;
-	auto wait(std::chrono::milliseconds) -> int;
-	void add_handle(easy_ref);
-	void assign(socket_t, void* data);
-	void remove_handle(easy_ref);
+	/**
+	 * Cleanup existing handle and set to given raw handle.
+	 */
+	void reset(CURLM* new_handle = nullptr) noexcept
+	{
+		curl_multi_cleanup(std::exchange(_handle, new_handle));
+	}
 
+	/**
+	 * Cleanup existing handle and set to a new handle.
+	 *
+	 * @throws std::runtime_error on failure to create handle.
+	 * @warning if there is an existing handle it may have things that need
+	 * to be cleaned up prior to this call.
+	 */
+	void init()
+	{
+		auto new_handle = curl_multi_init();
+		if (new_handle == nullptr)
+		{
+			throw std::runtime_error("failed to initialize multi handle");
+		}
+		reset(new_handle);
+	}
+	/**
+	 * see curl_multi_perform.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	auto perform() -> int
+	{
+		return invoke_r<int>(curl_multi_perform, _handle);
+	}
+
+	/**
+	 * see curl_multi_add_handle
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	void add_handle(easy_ref ref)
+	{
+		CURL* raw_easy_handle = ref._handle;
+		invoke(curl_multi_add_handle, _handle, raw_easy_handle);
+	}
+
+	/**
+	 * see curl_multi_remove_handle.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	void remove_handle(easy_ref ref)
+	{
+		CURL* raw_easy_handle = ref._handle;
+		invoke(curl_multi_remove_handle, _handle, raw_easy_handle);
+	}
+
+	/**
+	 * Returns an iterable object that can be iterated over to get messages
+	 * about attached easy handles.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	auto info_read() noexcept -> info_read_proxy
+	{
+		return info_read_proxy{_handle};
+	}
+
+
+	/**
+	 * see curl_multi_assign
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	void assign(socket_t sockfd, void* data)
+	{
+		invoke(curl_multi_assign, _handle, sockfd, data);
+	}
+
+	/**
+	 * see curl_multi_socket_action.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	auto socket_action(socket_t sockfd, int ev_bitmask) -> int
+	{
+		return invoke_r<int>(curl_multi_socket_action, _handle,
+		                     sockfd, ev_bitmask);
+	}
+
+	/**
+	 * see curl_multi_wait.
+	 * simple use case for no extra fds.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	auto wait(std::chrono::milliseconds ms) -> int
+	{
+		return invoke_r<int>(curl_multi_wait, _handle, nullptr, 0,
+		                     ms.count());
+	}
+
+	/**
+	 * see curl_multi_setopt
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
 	template<CURLMoption o, typename T>
-	inline void set(option::detail::multi_option<o, T> x)
+	void set(option::detail::multi_option<o, T> x)
 	{
 		invoke(curl_multi_setopt, _handle, o, x.value);
 	}
@@ -58,7 +178,7 @@ public:
 	 * example: @code x.set_handler<write>(foo); @endcode
 	 */
 	template<typename Event, bool NoError = false, typename T>
-	inline void set_handler(T *x) noexcept
+	void set_handler(T *x) noexcept
 	{
 		constexpr auto fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have member function handle(Event)");
@@ -72,7 +192,7 @@ public:
 	 * example: @code set_handler<write, T>(); @endcode
 	 */
 	template<typename Event, typename T>
-	inline void set_handler() noexcept
+	void set_handler() noexcept
 	{
 		constexpr auto fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(fptr, "T does not have static member function handle(Event)");
@@ -89,7 +209,7 @@ public:
 	 * example: @code set_handler<write, T>(d*); @endcode
 	 */
 	template<typename Event, typename T, typename D>
-	inline void set_handler(D *x) noexcept
+	void set_handler(D *x) noexcept
 	{
 		constexpr auto fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "T does not have static member function handle(Event, D*)");
@@ -97,128 +217,50 @@ public:
 	}
 };
 
-} // namespace curl
-namespace curl { // multi_ref::info_read_proxy
-
-struct multi_ref::info_read_message {
-	CURLMSG  msg;
-	easy_ref ref;
-	code     result;
-	void*    whatever;
-	auto operator->() -> info_read_message* { return this; }
-};
-
-struct multi_ref::info_read_proxy {
-	struct iterator {
-		using iterator_category = std::forward_iterator_tag;
-		using value_type = CURLMsg;
-		using difference_type = int;
-		using reference = multi_ref::info_read_message;
-		using pointer   = multi_ref::info_read_message;
-
-		iterator() noexcept = default;
-		iterator(CURLM *) noexcept;
-
-		bool operator!=(iterator x) noexcept
-		{
-			return _message != x._message;
-		}
-		auto operator++() noexcept -> iterator&;
-		auto operator*()  noexcept -> reference;
-		auto operator->() noexcept -> pointer  { return **this; }
-		auto remaining() const noexcept -> int { return _remaining; }
-
-	private:
-		CURLM*   _handle    = nullptr;
-		CURLMsg* _message   = nullptr;
-		int      _remaining = 0;
-	};
-	info_read_proxy(CURLM * h): _handle(h) {}
-	auto begin() -> iterator { return {_handle}; }
-	auto end()   -> iterator { return {}; }
-
-private:
-	CURLM*   _handle;
-};
-
-} // namespace curl
-namespace curl { // multi_ref::events
-
-// TODO implement
-struct multi_ref::push {
-	using signature = int(CURL*, CURL*, size_t, curl_pushheaders*, void*);
-
-	push(CURL*, CURL*, size_t, curl_pushheaders*, void*);
-
-	static void* dataptr(CURL*, CURL*, size_t, curl_pushheaders*, void* x) noexcept
-	{
-		return x;
-	}
-
-	static void setopt(CURLM*, signature*, void*) noexcept;
-};
-
-struct multi_ref::socket {
-	using signature = int(CURL*, curl_socket_t, int, void*, void*);
-	enum poll
-	{
-		in     = CURL_POLL_IN,
-		out    = CURL_POLL_OUT,
-		inout  = CURL_POLL_INOUT,
-		remove = CURL_POLL_REMOVE
-	};
-
-	easy_ref      easy;
-	curl_socket_t sock;
-	poll          what;
-	void*         data;
-
-	socket(CURL* e, curl_socket_t s, int w, void*, void* d) noexcept
-	: easy(e), sock(s), what(static_cast<poll>(w)), data(d) {}
-
-	static void* dataptr(CURL*, curl_socket_t, int, void* x, void*) noexcept
-	{
-		return x;
-	}
-
-	static void setopt(CURLM*, signature*, void*) noexcept;
-};
-
-struct multi_ref::timer {
-	using signature = int(CURLM*, long, void*);
-	using milliseconds = std::chrono::milliseconds;
-
-	multi_ref    multi;
-	milliseconds timeout;
-
-	timer(CURLM* m, long timeout_ms, void*) noexcept
-	: multi(m), timeout(timeout_ms) {}
-
-	static void* dataptr(CURLM*, long, void* x) noexcept
-	{
-		return x;
-	}
-
-	static void setopt(CURLM*, signature*, void*) noexcept;
-};
-
-} // namespace curl
-namespace curl { // mutli
-
+/**
+ * Owning RAII wrapper for a curl multi handle
+ */
 struct multi : public multi_ref {
-	multi();
-	~multi() noexcept;
+	/**
+	 * Construct with a valid handle.
+	 */
+	multi()
+	{
+		init();
+	}
 
-	multi(multi &&) noexcept;
-	multi& operator=(multi &&) noexcept;
+	/**
+	 * Cleanup existing handle
+	 */
+	~multi() noexcept
+	{
+		reset();
+	}
+
+	/**
+	 * Transfer ownership
+	 */
+	multi(multi&& x) noexcept
+	{
+		reset(std::exchange(x._handle, nullptr));
+	}
+
+	/**
+	 * Transfer ownership
+	 */
+	multi& operator=(multi &&x) noexcept
+	{
+		reset(std::exchange(x._handle, nullptr));
+		return *this;
+	}
+
 private:
 	using multi_ref::_handle;
 };
 
-} // namespace curl
-namespace curl { // multi
 
-/** CRTP multi handle that automatically sets callbacks and data.
+/**
+ * CRTP multi handle that automatically sets callbacks and data.
  * @param T the parent type.
  */
 template<typename T>
@@ -232,10 +274,18 @@ struct multi_base : public multi {
 	}
 
 private:
-	auto self() noexcept -> T* { return static_cast<T*>(this); }
+	auto self() noexcept -> T*
+	{
+		return static_cast<T*>(this);
+	}
+
 	using multi::multi;
+
+protected:
 	using multi::set_handler;
 };
 
 } // namespace curl
+
+#include "curl++/detail/multi_events.hpp"
 #endif // CURLPLUSPLUS_MULTI_HPP

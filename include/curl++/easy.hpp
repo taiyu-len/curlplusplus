@@ -64,7 +64,7 @@ public:
 	}
 
 	/**
-	 * resets exiting handle or creates a new handle.
+	 * resets existing handle or creates a new handle.
 	 *
 	 * @throws std::runtime_error on failure to create handle.
 	 */

@@ -17,7 +17,7 @@ struct easy_ref::write : const_buffer {
 		return s*t;
 	}
 
-	constexpr write(const char* d, size_t s, size_t t, void*) noexcept
+	write(const char* d, size_t s, size_t t, void*) noexcept
 	: const_buffer(d, s*t)
 	{};
 
@@ -36,7 +36,7 @@ struct easy_ref::header : const_buffer {
 	static constexpr CURLoption FUNC = CURLOPT_HEADERFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_HEADERDATA;
 
-	constexpr header(const char* d, size_t s, size_t t, void*) noexcept
+	header(const char* d, size_t s, size_t t, void*) noexcept
 	: const_buffer(d, s*t)
 	{};
 
@@ -55,7 +55,7 @@ struct easy_ref::read : mutable_buffer {
 	static constexpr CURLoption FUNC = CURLOPT_READFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_READDATA;
 
-	constexpr read(char* d, size_t s, size_t t, void*) noexcept
+	read(char* d, size_t s, size_t t, void*) noexcept
 	: mutable_buffer(d, s*t)
 	{};
 
@@ -77,7 +77,7 @@ struct easy_ref::debug : const_buffer {
 	easy_ref handle;
 	infotype type;
 
-	constexpr debug(CURL* e, infotype i, const char* c, size_t s, void*) noexcept
+	debug(CURL* e, infotype i, const char* c, size_t s, void*) noexcept
 	: const_buffer{c, s}
 	, handle(e)
 	, type(i)
