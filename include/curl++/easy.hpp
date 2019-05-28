@@ -15,7 +15,7 @@ namespace curl {
 /**
  * A light weight non-owning handle for a curl easy request.
  */
-struct easy_ref {
+struct easy_ref : detail::set_handler_base<easy_ref> {
 protected:
 	friend struct multi_ref;
 	CURL* _handle = nullptr;
@@ -144,91 +144,6 @@ public:
 		invoke(curl_easy_getinfo, _handle, I, &y);
 		return x.convert(y);
 	}
-
-
-	// TODO pull all this junk out to its own class because multi does all
-	// the same stuff too.
-
-	/**
-	 * Set handler for event to member function of T.
-	 * Safely sets the *FUNCTION and *DATA options in one go.
-	 *
-	 * if !S emit a compiler error if x->handle(e) is invalid.
-	 *
-	 * example: @code x.set_handler<write>(foo); @endcode
-	 */
-	template<typename Event, bool NoError = false, typename T>
-	void set_handler(T *x) noexcept
-	{
-		// required to avoid a buggy gcc warning
-		using fptr_t = typename Event::signature*;
-		constexpr fptr_t fptr = extract_mem_fn<Event, T>::fptr();
-		static_assert(NoError || fptr, "T does not have member function `handle(Event)`");
-		option::detail::setopt<Event>(*this, fptr, x);
-	}
-
-	/**
-	 * Set handler for event to static member function of T.
-	 *
-	 * example: @code set_handler<write, T>(); @endcode
-	 */
-	template<typename Event, typename T, bool NoError = false>
-	void set_handler() noexcept
-	{
-		using fptr_t = typename Event::signature*;
-		constexpr fptr_t fptr = extract_static_fn<Event, T>::fptr();
-		static_assert(NoError || fptr, "T does not have static member function `handle(Event)`");
-		option::detail::setopt<Event>(*this, fptr, nullptr);
-	}
-
-	/**
-	 * Set handler for event to static function of T with user specified data.
-	 *
-	 * example: @code set_handler<write, T>(&d); @endcode
-	 */
-	template<typename Event, typename T, typename D>
-	void set_handler(D *x) noexcept
-	{
-		using fptr_t = typename Event::signature*;
-		constexpr fptr_t fptr = extract_static_fn_with_data<Event, T, D>::fptr();
-		static_assert(fptr, "T does not have static member function `handle(Event, D*)`");
-		option::detail::setopt<Event>(*this, fptr, x);
-	}
-#if 0
-	/**
-	 * Set callback from a lambda.
-	 *
-	 * only works in c++17 due to constexpr conversion to function pointer.
-	 * and does not work in g++ due to a bug
-	 *   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258
-	 *
-	 * sfinae is used to check if +T gives a value and is constexpr.
-	 *
-	 */
-	template<typename T,
-		typename F = decltype(+std::declval<T>()),
-		F x = +std::declval<T>()>
-	void set_handle(T x) noexcept
-	{
-		constexpr auto fptr = +x;
-		constexpr fptr_t fptr = extract_fptr<fptr>::fptr();
-		option::detail::setopt<Event>(*this, fptr, nullptr);
-	}
-
-	/**
-	 * Set callback from a lambda and data pointer.
-	 * same as above.
-	 */
-	template<typename T, typename D,
-		typename F = decltype(+std::declval<T>()),
-		F x = +std::declval<T>()>
-	void set_handle(T x, D* y) noexcept
-	{
-		constexpr auto fptr = +x;
-		constexpr fptr_t fptr = extract_fptr_with_data<fptr, D>::fptr();
-		option::detail::setopt<Event>(*this, fptr, y);
-	}
-#endif
 };
 
 /**

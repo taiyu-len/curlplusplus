@@ -6,31 +6,6 @@
 namespace curl {
 namespace option {
 namespace detail {
-/**
- * Extract function pointer for default callback if it exists.
- */
-template<typename T, typename = void>
-struct get_default {
-	static constexpr auto fptr() noexcept -> typename T::signature*
-	{
-		return nullptr;
-	}
-};
-
-template<typename T>
-struct get_default<T, decltype(void(&T::DEFAULT))> {
-	static constexpr auto fptr() noexcept -> typename T::signature*
-	{
-		return &T::DEFAULT;
-	}
-};
-
-template<typename E, typename T>
-void setopt(T& handle, typename E::signature* fp, void* dp) noexcept
-{
-	handle.set(E::FUNC, fp ? fp : get_default<E>::fptr());
-	handle.set(E::DATA, fp ? dp : nullptr);
-}
 
 /* option_base specializations */
 

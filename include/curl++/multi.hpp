@@ -20,7 +20,7 @@ namespace curl {
 /**
  * Non-owning wrapper for a curl multi handle.
  */
-struct multi_ref {
+struct multi_ref : detail::set_handler_base<multi_ref> {
 protected:
 	CURLM* _handle = nullptr;
 public:
@@ -180,53 +180,6 @@ public:
 	void set(CURLMoption o, T x)
 	{
 		invoke(curl_multi_setopt, _handle, o, x);
-	}
-
-	/** wrapper for curl_multi_setopt for functions and data from an object.
-	 * @pre *this
-	 *
-	 * Sets the *FUNCTION and *DATA options in one go.
-	 * if !S emit a compiler error if x->handle(e) is invalid.
-	 *
-	 * example: @code x.set_handler<write>(foo); @endcode
-	 */
-	template<typename Event, bool NoError = false, typename T>
-	void set_handler(T *x) noexcept
-	{
-		constexpr auto fptr = extract_mem_fn<Event, T>::fptr();
-		static_assert(NoError || fptr, "T does not have member function handle(Event)");
-		option::detail::setopt<Event>(*this, fptr, x);
-	}
-
-	/** wrapper for curl_multi_setopt for function from static member
-	 * functions.
-	 * @pre *this
-	 *
-	 * example: @code set_handler<write, T>(); @endcode
-	 */
-	template<typename Event, typename T>
-	void set_handler() noexcept
-	{
-		constexpr auto fptr = extract_static_fn<Event, T>::fptr();
-		static_assert(fptr, "T does not have static member function handle(Event)");
-		option::detail::setopt<Event>(*this, fptr, nullptr);
-	}
-
-	/** wrapper for curl_multi_setopt for functions and data from static
-	 * member function and data pointer.
-	 *
-	 * @param T Contains static member functions for event.
-	 * @param D Data pointer for event
-	 * @pre *this
-	 *
-	 * example: @code set_handler<write, T>(d*); @endcode
-	 */
-	template<typename Event, typename T, typename D>
-	void set_handler(D *x) noexcept
-	{
-		constexpr auto fptr = extract_static_fn_with_data<Event, T, D>::fptr();
-		static_assert(fptr, "T does not have static member function handle(Event, D*)");
-		option::detail::setopt<Event>(*this, fptr, x);
 	}
 };
 
