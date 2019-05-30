@@ -24,7 +24,6 @@ struct multi_ref : detail::set_handler_base<multi_ref> {
 protected:
 	CURLM* _handle = nullptr;
 public:
-	// events
 	struct push;
 	struct socket;
 	struct timer;
@@ -73,6 +72,7 @@ public:
 		}
 		reset(new_handle);
 	}
+
 	/**
 	 * see curl_multi_perform.
 	 *
@@ -120,7 +120,6 @@ public:
 		return info_read_proxy{_handle};
 	}
 
-
 	/**
 	 * see curl_multi_assign
 	 *
@@ -155,6 +154,18 @@ public:
 	{
 		return invoke_r<int>(curl_multi_wait, _handle, nullptr, 0,
 		                     ms.count());
+	}
+
+	/**
+	 * See curl_multi_timeout.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	auto timeout() -> std::chrono::milliseconds
+	{
+		return std::chrono::milliseconds(
+			invoke_r<long>(curl_multi_timeout, _handle));
 	}
 
 	/**
@@ -205,7 +216,6 @@ struct multi : public multi_ref {
 
 	multi(easy const&) = delete;
 	auto operator=(multi const&) -> multi& = delete;
-
 
 	/**
 	 * Transfer ownership
