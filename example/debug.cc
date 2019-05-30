@@ -112,7 +112,7 @@ void print_debug::dump(const char* text, FILE* stream, const unsigned char* ptr,
 			fprintf(stream, "%c", (x >= 0x20 && x < 0x80) ? x : '.');
 			/* check again for 0D0A, to avoid an extra \n if it's at
 			 * width */
-			if (is_0D0A(i+c))
+			if (is_0D0A(i+c+1))
 			{
 				i += c + 3 - width;
 				break;
