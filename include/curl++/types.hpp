@@ -6,8 +6,8 @@
 namespace curl {
 
 // simple typedefs of curl types
-using infotype = curl_infotype;
-using socket_t = curl_socket_t;
+using infotype = ::curl_infotype;
+using socket_t = ::curl_socket_t;
 
 // error buffer type
 struct error_buffer : public std::string {
@@ -83,9 +83,9 @@ inline const char* url_strerror(CURLUcode value) {
 
 } // namespace detail
 
-using code   = detail::code_template< CURLcode  , CURLE_OK  , &curl_easy_strerror  >;
-using mcode  = detail::code_template< CURLMcode , CURLM_OK  , &curl_multi_strerror >;
-using shcode = detail::code_template< CURLSHcode, CURLSHE_OK, &curl_share_strerror >;
+using code   = detail::code_template< CURLcode  , CURLE_OK  , &::curl_easy_strerror  >;
+using mcode  = detail::code_template< CURLMcode , CURLM_OK  , &::curl_multi_strerror >;
+using shcode = detail::code_template< CURLSHcode, CURLSHE_OK, &::curl_share_strerror >;
 using ucode  = detail::code_template< CURLUcode , CURLUE_OK , &detail::url_strerror>;
 
 inline auto to_code(CURLcode c)   noexcept -> code   { return c; }

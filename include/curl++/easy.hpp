@@ -60,7 +60,7 @@ public:
 	 */
 	void reset(CURL* new_handle = nullptr) noexcept
 	{
-		curl_easy_cleanup(std::exchange(_handle, new_handle));
+		::curl_easy_cleanup(std::exchange(_handle, new_handle));
 	}
 
 	/**
@@ -71,9 +71,9 @@ public:
 	void init()
 	{
 		if (_handle != nullptr) {
-			curl_easy_reset(_handle);
+			::curl_easy_reset(_handle);
 		} else {
-			_handle = curl_easy_init();
+			_handle = ::curl_easy_init();
 		}
 		if (_handle == nullptr) {
 			throw std::runtime_error("failed to initialize easy handle");
@@ -88,7 +88,7 @@ public:
 	 */
 	void pause(pause_flags flags)
 	{
-		invoke(curl_easy_pause, _handle, static_cast<long>(flags));
+		invoke(::curl_easy_pause, _handle, static_cast<long>(flags));
 	}
 
 	/**
@@ -99,7 +99,7 @@ public:
 	 */
 	void perform()
 	{
-		invoke(curl_easy_perform, _handle);
+		invoke(::curl_easy_perform, _handle);
 	}
 
 	/**
@@ -112,7 +112,7 @@ public:
 	template<CURLoption o, typename T>
 	void set(option::detail::easy_option<o, T> x)
 	{
-		invoke(curl_easy_setopt, _handle, o, x.value);
+		invoke(::curl_easy_setopt, _handle, o, x.value);
 	}
 
 	/**
@@ -126,7 +126,7 @@ public:
 	template<typename T>
 	void set(CURLoption o, T x)
 	{
-		invoke(curl_easy_setopt, _handle, o, x);
+		invoke(::curl_easy_setopt, _handle, o, x);
 	}
 
 	/**
@@ -141,7 +141,7 @@ public:
 	auto get(info::detail::info<I, T> x) const -> T
 	{
 		auto y = x.value();
-		invoke(curl_easy_getinfo, _handle, I, &y);
+		invoke(::curl_easy_getinfo, _handle, I, &y);
 		return x.convert(y);
 	}
 };

@@ -1,18 +1,24 @@
 #ifndef CURLPLUSPLUS_SHARE_HPP
 #define CURLPLUSPLUS_SHARE_HPP
 #include <curl/curl.h>
-namespace curl { // share_ref
+namespace curl {
 
 struct share_ref {
 protected:
-	CURLSH* handle = nullptr;
+	CURLSH* _handle = nullptr;
 public:
+	/**
+	 * Construct empty handle by default
+	 */
 	share_ref() noexcept = default;
-	share_ref(CURLSH *h) noexcept : handle(h) {};
-};
 
-} // namespace curl
-namespace curl { // share_handle
+	/**
+	 * Construct from given raw handle.
+	 */
+	share_ref(CURLSH *handle) noexcept
+	: handle(h)
+	{};
+};
 
 struct share_handle : share_ref
 {

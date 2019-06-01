@@ -52,7 +52,7 @@ struct info_read_iterator {
 	 */
 	auto operator++() noexcept -> info_read_iterator&
 	{
-		_message = curl_multi_info_read(_handle, &_remaining);
+		_message = ::curl_multi_info_read(_handle, &_remaining);
 		return *this;
 	}
 

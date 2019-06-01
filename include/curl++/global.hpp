@@ -7,7 +7,9 @@ namespace curl {
  * RAII wrapper around curl global state.
  */
 struct global {
-	/** Bit flags used to initialize curl global state. */
+	/**
+	 * Bit flags used to initialize curl global state.
+	 */
 	enum flags : unsigned long {
 		ALL        = CURL_GLOBAL_ALL,
 		SSL        = CURL_GLOBAL_SSL,
@@ -17,19 +19,23 @@ struct global {
 		ACK_EINTER = CURL_GLOBAL_ACK_EINTR
 	};
 
-	/** Initialize curl global state with given flags.
+	/**
+	 * see curl_global_init.
+	 * Initialize curl global state with given flags.
 	 *
 	 * @throws curl::code if initialization failed
 	 */
 	explicit global(flags f = DEFAULT)
 	{
-		invoke(curl_global_init, f);
+		invoke(::curl_global_init, f);
 	}
 
-	/** Cleans up curl global state. */
+	/**
+	 * Cleans up curl global state.
+	 */
 	~global() noexcept
 	{
-		curl_global_cleanup();
+		::curl_global_cleanup();
 	}
 };
 } // namespace curl

@@ -53,7 +53,7 @@ public:
 	 */
 	void reset(CURLM* new_handle = nullptr) noexcept
 	{
-		curl_multi_cleanup(std::exchange(_handle, new_handle));
+		::curl_multi_cleanup(std::exchange(_handle, new_handle));
 	}
 
 	/**
@@ -65,7 +65,7 @@ public:
 	 */
 	void init()
 	{
-		auto new_handle = curl_multi_init();
+		auto new_handle = ::curl_multi_init();
 		if (new_handle == nullptr)
 		{
 			throw std::runtime_error("failed to initialize multi handle");
@@ -81,7 +81,7 @@ public:
 	 */
 	auto perform() -> int
 	{
-		return invoke_r<int>(curl_multi_perform, _handle);
+		return invoke_r<int>(::curl_multi_perform, _handle);
 	}
 
 	/**
@@ -93,7 +93,7 @@ public:
 	void add_handle(easy_ref ref)
 	{
 		CURL* raw_easy_handle = ref._handle;
-		invoke(curl_multi_add_handle, _handle, raw_easy_handle);
+		invoke(::curl_multi_add_handle, _handle, raw_easy_handle);
 	}
 
 	/**
@@ -105,7 +105,7 @@ public:
 	void remove_handle(easy_ref ref)
 	{
 		CURL* raw_easy_handle = ref._handle;
-		invoke(curl_multi_remove_handle, _handle, raw_easy_handle);
+		invoke(::curl_multi_remove_handle, _handle, raw_easy_handle);
 	}
 
 	/**
@@ -128,7 +128,7 @@ public:
 	 */
 	void assign(socket_t sockfd, void* data)
 	{
-		invoke(curl_multi_assign, _handle, sockfd, data);
+		invoke(::curl_multi_assign, _handle, sockfd, data);
 	}
 
 	/**
@@ -139,7 +139,7 @@ public:
 	 */
 	auto socket_action(socket_t sockfd, int ev_bitmask) -> int
 	{
-		return invoke_r<int>(curl_multi_socket_action, _handle,
+		return invoke_r<int>(::curl_multi_socket_action, _handle,
 		                     sockfd, ev_bitmask);
 	}
 
@@ -152,7 +152,7 @@ public:
 	 */
 	auto wait(std::chrono::milliseconds ms) -> int
 	{
-		return invoke_r<int>(curl_multi_wait, _handle, nullptr, 0,
+		return invoke_r<int>(::curl_multi_wait, _handle, nullptr, 0,
 		                     ms.count());
 	}
 
@@ -165,7 +165,7 @@ public:
 	auto timeout() -> std::chrono::milliseconds
 	{
 		return std::chrono::milliseconds(
-			invoke_r<long>(curl_multi_timeout, _handle));
+			invoke_r<long>(::curl_multi_timeout, _handle));
 	}
 
 	/**
@@ -177,7 +177,7 @@ public:
 	template<CURLMoption o, typename T>
 	void set(option::detail::multi_option<o, T> x)
 	{
-		invoke(curl_multi_setopt, _handle, o, x.value);
+		invoke(::curl_multi_setopt, _handle, o, x.value);
 	}
 
 	/**
@@ -190,7 +190,7 @@ public:
 	template<typename T>
 	void set(CURLMoption o, T x)
 	{
-		invoke(curl_multi_setopt, _handle, o, x);
+		invoke(::curl_multi_setopt, _handle, o, x);
 	}
 };
 

@@ -7,12 +7,10 @@ namespace curl {
 namespace option {
 namespace detail {
 
-/* option_base specializations */
-
-struct bit_flag_option {};
-
-/** Base template for translating c++ types to curl compatible option types on
+/**
+ * Base template for translating c++ types to curl compatible option types on
  * construction.
+ *
  * @param O the type of option being set.
  * @param option the option to set.
  * @param T The c++ type.
@@ -24,7 +22,6 @@ struct option_base
 	T value;
 };
 
-// Specialization for std::string
 template<typename O, O option>
 struct option_base<O, option, std::string>
 {
@@ -33,7 +30,6 @@ struct option_base<O, option, std::string>
 	const char* value;
 };
 
-// Specialization for bool
 template<typename O, O option>
 struct option_base<O, option, bool>
 {
@@ -41,12 +37,17 @@ struct option_base<O, option, bool>
 	long value;
 };
 
-// Specialization for bitflags
+/**
+ * Type flag for bitflag options.
+ */
+struct bit_flag_option {};
+
 template<typename O, O option>
 struct option_base<O, option, bit_flag_option>
 {
 	explicit option_base(unsigned long x): value(x) {};
 	unsigned long value;
+
 	auto operator|(option_base x) const noexcept -> option_base
 	{
 		return option_base(value | x.value);
@@ -58,7 +59,6 @@ struct option_base<O, option, bit_flag_option>
 	}
 };
 
-// Specializatoin for error_buffers
 template<typename O, O option>
 struct option_base<O, option, curl::error_buffer>
 {
