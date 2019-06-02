@@ -38,19 +38,19 @@ public:
 	/**
 	 * Default initialize to empty handle.
 	 */
-	constexpr easy_ref() noexcept = default;
+	easy_ref() noexcept = default;
 
 	/**
 	 * Initialize from raw pointer.
 	 */
-	constexpr easy_ref(CURL *h) noexcept
+	easy_ref(CURL *h) noexcept
 	: _handle(h)
 	{};
 
 	/**
 	 * @returns true iff handle is valid.
 	 */
-	constexpr explicit operator bool() const noexcept
+	explicit operator bool() const noexcept
 	{
 		return _handle != nullptr;
 	}
