@@ -3,8 +3,50 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
+#include <memory>
+
 namespace curl {
 namespace detail {
+
+/**
+ * Used to convert parameter into reference or pointer depending on
+ * whats needed.
+ */
+template<typename T>
+struct to_ref_or_ptr_t {
+	constexpr to_ref_or_ptr_t(T *value) noexcept :_value(value) {}
+	constexpr operator T*() { return _value; };
+	constexpr operator T&() { return *_value; }
+
+	T *_value;
+};
+
+template<typename T>
+auto to_ref_or_ptr(T* x) -> to_ref_or_ptr_t<T>
+{
+	return x;
+}
+
+/**
+ * Extract event type from object
+ */
+template<typename F>
+struct fptr_event;
+
+template<typename R, typename H>
+struct fptr_event<R(*)(H)>
+{
+	using type = std::decay_t<H>;
+};
+
+template<typename R, typename H, typename D>
+struct fptr_event<R(*)(H, D)>
+{
+	using type = std::decay_t<H>;
+};
+
+template<typename F>
+using fptr_event_t = typename fptr_event<F>::type;
 
 /*
  * Method Invoke functions for an event
@@ -35,22 +77,22 @@ struct invoke_handler<E, R(Args...)> {
 	{
 		auto event = E(args...);
 		auto state = static_cast<D*>(E::dataptr(args...));
-		return T::on(event, state);
+		return T::on(event, to_ref_or_ptr(state));
 	}
-#if 0
-	template<auto fptr>
+#if __cplusplus >= 201703L
+	template<auto F>
 	static auto invoke_fptr(Args... args) -> R
 	{
 		auto event = E(args...);
-		return fptr(event);
+		return F(event);
 	}
 
-	template<auto fptr, typename D>
+	template<auto F, typename D>
 	static auto invoke_fptr_with_data(Args... args) -> R
 	{
 		auto event = E(args...);
 		auto state = static_cast<D*>(E::dataptr(args...));
-		return fptr(event, state);
+		return F(event, to_ref_or_ptr(state));
 	}
 #endif
 };
@@ -61,16 +103,26 @@ struct invoke_handler<E, R(Args...)> {
 
 /// detects t.on(e);
 template<typename E, typename T>
-using detect_mem_fn = decltype(std::declval<T>().on(std::declval<E>()), void());
+using detect_mem_fn = decltype(void(std::declval<T>().on(std::declval<E>())));
 
 /// detects T::on(e);
 template<typename E, typename T>
-using detect_static_fn = decltype(T::on(std::declval<E>()), void());
+using detect_static_fn = decltype(void(T::on(std::declval<E>())));
 
-/// detects T::on(e, &d);
+/// detects T::on(e, &d) or T::on(e, d);
 template<typename E, typename T, typename D>
-using detect_static_fn_with_data = decltype(T::on(std::declval<E>(), std::declval<D*>()), void());
+using detect_static_fn_with_data = decltype(
+	void( T::on( std::declval<E>()
+	           , to_ref_or_ptr(std::declval<D*>()))));
 
+#if __cplusplus >= 201703L
+/// Detectes F(e, &d) or F(e, d)
+template<auto F, typename E, typename D>
+using detect_fptr_with_data = decltype(
+	void( F( std::declval<E>()
+	       , to_ref_or_ptr(std::declval<D*>()))));
+
+#endif
 /*
  * Default Extractor types returning nullptr
  */
@@ -124,29 +176,29 @@ struct extract_static_fn_with_data<E, T, D, detail::detect_static_fn_with_data<E
 	}
 };
 
-#if 0
-template<auto x>
-struct extract_fptr;
-
-template<typename R, typename E, R(*fp)(E)>
-struct extract_fptr<fp>
+#if __cplusplus >= 201703L
+template<auto F, typename E>
+struct extract_fptr
 {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
-		return &detail::invoke_handle<E>::template invoke_fptr<fp>;
+		return &detail::invoke_handler<E>::template invoke_fptr<F>;
 	}
 };
-template<auto x, typename D>
-struct extract_fptr_with_data;
 
-template<typename R, typename E, typename D, R(*fp)(E, D*)>
-struct extract_fptr<fp, D>
+
+template<auto F, typename E, typename D, typename = void>
+struct extract_fptr_with_data : detail::extract_default<E> {};
+
+template<auto F, typename E, typename D>
+struct extract_fptr_with_data<F, E, D, detect_fptr_with_data<F, E, D>>
 {
 	static constexpr
 	typename E::signature* fptr() noexcept
 	{
-		return &detail::invoke_handle<E>::template invoke_fptr_with_data<fp, D>;
+		return &detail::invoke_handler<E>::
+			template invoke_fptr_with_data<F, D>;
 	}
 };
 #endif
@@ -229,6 +281,27 @@ struct set_handler_base {
 		self().set(Event::DATA, fptr ? x    : nullptr);
 	}
 
+#if __cplusplus >= 201703L
+	template<auto F, typename E = fptr_event_t<decltype(F)>>
+	void set_handler() noexcept
+	{
+		using fptr_t = typename E::signature*;
+		constexpr fptr_t fptr = extract_fptr<F, E>::fptr();
+		self().set(E::FUNC, fptr ? fptr : get_default<E>::fptr());
+		self().set(E::DATA, nullptr);
+	}
+
+	template<auto F, typename E = fptr_event_t<decltype(F)>, typename D>
+	void set_handler(D* x) noexcept
+	{
+		using fptr_t = typename E::signature*;
+		constexpr fptr_t fptr = extract_fptr_with_data<F, E, D>::fptr();
+		static_assert(fptr, "F can not be called via `F(Event, D)`");
+		self().set(E::FUNC, fptr ? fptr : get_default<E>::fptr());
+		self().set(E::DATA, fptr ? x    : nullptr);
+	}
+
+#endif
 #if 0
 	/**
 	 * Set callback from a lambda.

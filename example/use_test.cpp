@@ -4,6 +4,7 @@
 #include <iostream>
 struct print_callbacks : curl::easy_base<print_callbacks> {
 	print_callbacks() {
+		std::cout << "==\n== crtp use case\n==\n";
 		namespace o = curl::option;
 		set(o::url("www.example.com"));
 		set(o::verbose(true));
@@ -40,7 +41,36 @@ struct print_callbacks : curl::easy_base<print_callbacks> {
 	}
 };
 
-// plain easy case
+struct mem_fn_cb {
+	size_t on(curl::easy::write w) {
+		std::cout << "member fn| write   : received " << w.size() << '\n';
+		std::cout << "  this=" << this << '\n';
+		return w.size();
+	}
+};
+struct static_fn_cb {
+	static size_t on(curl::easy::write w) {
+		std::cout << "static fn| write   : received " << w.size() << '\n';
+		return w.size();
+	}
+};
+struct static_fn_with_ptr_cb {
+	static size_t on(curl::easy::write w, int *data) {
+		std::cout << "data   fn| write   : received " << w.size();
+		std::cout << "  data[" << data <<  "] = " << *data << '\n';
+		return w.size();
+	}
+};
+struct static_fn_with_value_cb {
+	static size_t on(curl::easy::write w, int data) {
+		std::cout << "data   fn| write   : received " << w.size();
+		std::cout << "  data=" << data << '\n';
+		return w.size();
+	}
+};
+
+
+// plain case manually testing various kinds of handlers
 void plain_usage()
 {
 	namespace o = curl::option;
@@ -48,15 +78,39 @@ void plain_usage()
 	auto h = curl::easy();
 	// setup options
 	h.set(o::url("https://www.example.com"));
-	h.set_handler<curl::easy::header, print_callbacks>();
-	h.set_handler<curl::easy::write, print_callbacks>();
+
+	// callback with member function.
+	mem_fn_cb mfc;
+	h.set_handler<curl::easy::write>(&mfc);
+	h.perform();
+
+	// callback with static member function
+	h.set_handler<curl::easy::write, static_fn_cb>();
+	h.perform();
+
+	// callback with ptr argument
+	int data = 99;
+	h.set_handler<curl::easy::write, static_fn_with_ptr_cb>(&data);
+	h.perform();
+
+	// callback with value argument
+	h.set_handler<curl::easy::write, static_fn_with_value_cb>(&data);
+	h.perform();
+
+	// callback with function ptr
+	h.set_handler<&static_fn_cb::on>();
+	h.perform();
+
+	h.set_handler<&static_fn_with_ptr_cb::on>(&data);
+	h.perform();
+
+	h.set_handler<&static_fn_with_value_cb::on>(&data);
 	h.perform();
 }
 
 int main() try {
 	std::cout << "==\n== Plain use case\n==\n";
 	plain_usage();
-	std::cout << "==\n== crtp use case\n==\n";
 	print_callbacks().perform();
 	return 0;
 } catch (std::exception const& e) {
