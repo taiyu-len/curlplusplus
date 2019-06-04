@@ -21,7 +21,6 @@ struct easy_ref
 	: detail::handle_base<CURL*>
 	, detail::set_handler_base<easy_ref>
 {
-	friend struct multi_ref;
 	enum pause_flags : long {
 		pause_recv = CURLPAUSE_RECV,
 		pause_send = CURLPAUSE_SEND,

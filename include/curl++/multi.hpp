@@ -1,11 +1,12 @@
 #ifndef CURLPLUSPLUS_MULTI_HPP
 #define CURLPLUSPLUS_MULTI_HPP
-#include "curl++/easy.hpp"        // for easy_ref
-#include "curl++/info_read.hpp"
-#include "curl++/invoke.hpp"
-#include "curl++/multi_opt.hpp"
-#include "curl++/option.hpp"      // for handler
-#include "curl++/types.hpp"       // for mcode
+#include "easy.hpp"        // for easy_ref
+#include "handle_base.hpp"
+#include "info_read.hpp"
+#include "invoke.hpp"
+#include "multi_opt.hpp"
+#include "option.hpp"      // for handler
+#include "types.hpp"       // for mcode
 #include <chrono>                 // for milliseconds
 #include <curl/curl.h>
 #include <iterator>
@@ -20,33 +21,15 @@ namespace curl {
 /**
  * Non-owning wrapper for a curl multi handle.
  */
-struct multi_ref : detail::set_handler_base<multi_ref> {
-protected:
-	CURLM* _handle = nullptr;
-public:
+struct multi_ref
+	: detail::handle_base<CURLM*>
+	, detail::set_handler_base<multi_ref>
+{
 	struct push;
 	struct socket;
 	struct timer;
 
-	/**
-	 * Default constuct empty handle.
-	 */
-	multi_ref() noexcept = default;
-
-	/**
-	 * Construct with given raw handle.
-	 */
-	multi_ref(CURLM* h) noexcept
-	: _handle(h)
-	{}
-
-	/**
-	 * @return true iff handle is valid.
-	 */
-	explicit operator bool() const noexcept
-	{
-		return _handle != nullptr;
-	}
+	using detail::handle_base<CURLM*>::handle_base;
 
 	/**
 	 * Cleanup existing handle and set to given raw handle.
@@ -92,8 +75,7 @@ public:
 	 */
 	void add_handle(easy_ref ref)
 	{
-		CURL* raw_easy_handle = ref._handle;
-		invoke(::curl_multi_add_handle, _handle, raw_easy_handle);
+		invoke(::curl_multi_add_handle, _handle, ref.raw());
 	}
 
 	/**
@@ -104,8 +86,7 @@ public:
 	 */
 	void remove_handle(easy_ref ref)
 	{
-		CURL* raw_easy_handle = ref._handle;
-		invoke(::curl_multi_remove_handle, _handle, raw_easy_handle);
+		invoke(::curl_multi_remove_handle, _handle, ref.raw());
 	}
 
 	/**
