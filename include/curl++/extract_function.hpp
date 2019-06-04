@@ -282,6 +282,14 @@ struct set_handler_base {
 	}
 
 #if __cplusplus >= 201703L
+	/**
+	 * Set handler from function pointer.
+	 *
+	 * example: @code
+	 * size_t on_write(curl::easy::write w) { ...; return w.size(); }
+	 * h.set_handler<&on_write>();
+	 * @endcode
+	 */
 	template<auto F, typename E = fptr_event_t<decltype(F)>>
 	void set_handler() noexcept
 	{
@@ -291,6 +299,15 @@ struct set_handler_base {
 		self().set(E::DATA, nullptr);
 	}
 
+	/**
+	 * Set handler from function pointer with data.
+	 *
+	 * example: @code
+	 * size_t on_write(curl::easy::write w, int x) { ...; return w.size(); }
+	 * int foo;
+	 * h.set_handler<&on_write>(&foo);
+	 * @endcode
+	 */
 	template<auto F, typename E = fptr_event_t<decltype(F)>, typename D>
 	void set_handler(D* x) noexcept
 	{
