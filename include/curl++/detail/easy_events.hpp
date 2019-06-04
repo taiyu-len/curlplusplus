@@ -21,7 +21,7 @@ struct easy_ref::write : const_buffer {
 	: const_buffer(d, s*t)
 	{};
 
-	static auto dataptr(const char*, size_t, size_t, void* x) noexcept
+	static auto dataptr(const char*, size_t, size_t, void* x) noexcept -> void*
 	{
 		return x;
 	}

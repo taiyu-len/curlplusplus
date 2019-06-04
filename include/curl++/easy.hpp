@@ -1,11 +1,13 @@
 #ifndef CURLPLUSPLUS_EASY_HPP
 #define CURLPLUSPLUS_EASY_HPP
-#include "curl++/easy_info.hpp"
-#include "curl++/easy_opt.hpp"
-#include "curl++/extract_function.hpp"
-#include "curl++/invoke.hpp"
-#include "curl++/option.hpp" // for handler
-#include "curl++/types.hpp"
+#include "easy_info.hpp"
+#include "easy_opt.hpp"
+#include "extract_function.hpp"
+#include "handle_base.hpp"
+#include "invoke.hpp"
+#include "option.hpp" // for handler
+#include "types.hpp"
+
 #include <cstddef>           // for size_t
 #include <curl/curl.h>       // for CURL, curl_easy_*, etc
 #include <stdexcept>         // for exceptions
@@ -15,11 +17,11 @@ namespace curl {
 /**
  * A light weight non-owning handle for a curl easy request.
  */
-struct easy_ref : detail::set_handler_base<easy_ref> {
-protected:
+struct easy_ref
+	: detail::handle_base<CURL*>
+	, detail::set_handler_base<easy_ref>
+{
 	friend struct multi_ref;
-	CURL* _handle = nullptr;
-public:
 	enum pause_flags : long {
 		pause_recv = CURLPAUSE_RECV,
 		pause_send = CURLPAUSE_SEND,
@@ -35,25 +37,7 @@ public:
 	struct write;
 	struct progress;
 
-	/**
-	 * Default initialize to empty handle.
-	 */
-	easy_ref() noexcept = default;
-
-	/**
-	 * Initialize from raw pointer.
-	 */
-	easy_ref(CURL *h) noexcept
-	: _handle(h)
-	{};
-
-	/**
-	 * @returns true iff handle is valid.
-	 */
-	explicit operator bool() const noexcept
-	{
-		return _handle != nullptr;
-	}
+	using detail::handle_base<CURL*>::handle_base;
 
 	/**
 	 * cleanup existing handle and set to given raw handle.

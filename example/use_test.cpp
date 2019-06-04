@@ -73,6 +73,7 @@ struct static_fn_with_value_cb {
 // plain case manually testing various kinds of handlers
 void plain_usage()
 {
+	std::cout << "==\n== Plain use case\n==\n";
 	namespace o = curl::option;
 	// create a easy handle.
 	auto h = curl::easy();
@@ -109,7 +110,6 @@ void plain_usage()
 }
 
 int main() try {
-	std::cout << "==\n== Plain use case\n==\n";
 	plain_usage();
 	print_callbacks().perform();
 	return 0;

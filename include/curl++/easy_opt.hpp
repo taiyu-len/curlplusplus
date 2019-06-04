@@ -3,6 +3,7 @@
 #include "curl++/option.hpp"  // for option_enum, option_base
 #include <curl/curl.h>        // for CURLOPT*
 #include <string>             // for string
+
 namespace curl {
 namespace option { /* curl easy options */
 namespace detail { /* easy_option */

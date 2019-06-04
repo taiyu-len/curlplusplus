@@ -1,6 +1,7 @@
 #ifndef CURLPLUSPLUS_OPTION_HPP
 #define CURLPLUSPLUS_OPTION_HPP
-#include "curl++/types.hpp"
+#include "types.hpp"
+#include "handle_base.hpp"
 #include <curl/curl.h>
 #include <string>
 namespace curl {
@@ -35,6 +36,13 @@ struct option_base<O, option, bool>
 {
 	explicit option_base(bool x): value(static_cast<long>(x)) {};
 	long value;
+};
+
+template<typename O, O option, typename T>
+struct option_base<O, option, curl::detail::handle_base<T>>
+{
+	explicit option_base(curl::detail::handle_base<T>& x): value(x.raw()) {};
+	T value;
 };
 
 /**
