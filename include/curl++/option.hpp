@@ -39,9 +39,9 @@ struct option_base<O, option, bool>
 };
 
 template<typename O, O option, typename T>
-struct option_base<O, option, curl::detail::handle_base<T>>
+struct option_base<O, option, ::curl::detail::handle_base<T>>
 {
-	explicit option_base(curl::detail::handle_base<T>& x): value(x.raw()) {};
+	explicit option_base(::curl::detail::handle_base<T>& x): value(x.raw()) {};
 	T value;
 };
 
@@ -68,9 +68,9 @@ struct option_base<O, option, bit_flag_option>
 };
 
 template<typename O, O option>
-struct option_base<O, option, curl::error_buffer>
+struct option_base<O, option, ::curl::error_buffer>
 {
-	explicit option_base(curl::error_buffer& x):value(&x[0]) {};
+	explicit option_base(::curl::error_buffer& x):value(&x[0]) {};
 	char* value;
 };
 

@@ -35,3 +35,5 @@ target_link_libraries(time PRIVATE curl++)
 add_executable(10-at-a-time 10-at-a-time.cc)
 target_link_libraries(10-at-a-time PRIVATE curl++)
 
+add_executable(shared-connection-cache shared-connection-cache.cc)
+target_link_libraries(shared-connection-cache PRIVATE curl++)

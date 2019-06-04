@@ -1,6 +1,8 @@
 #ifndef CURLPLUSPLUS_EASY_OPT_HPP
 #define CURLPLUSPLUS_EASY_OPT_HPP
-#include "curl++/option.hpp"  // for option_enum, option_base
+#include "handle_base.hpp"
+#include "option.hpp"  // for option_enum, option_base
+
 #include <curl/curl.h>        // for CURLOPT*
 #include <string>             // for string
 
@@ -30,7 +32,8 @@ template<typename T>
 auto userdata(T* x) { return CURL_OPTION_TYPE(PRIVATE, T*){x}; }
 using no_progress     = CURL_OPTION_TYPE(NOPROGRESS, bool);
 using follow_location = CURL_OPTION_TYPE(FOLLOWLOCATION, bool);
-using error_buffer    = CURL_OPTION_TYPE(ERRORBUFFER, curl::error_buffer);
+using error_buffer    = CURL_OPTION_TYPE(ERRORBUFFER, ::curl::error_buffer);
+using share           = CURL_OPTION_TYPE(SHARE, ::curl::detail::handle_base<CURLSH*>);
 namespace netrc {
 	using optional = CURL_ENUM_TYPE(NETRC, CURL_NETRC_OPTIONAL);
 	using ignored  = CURL_ENUM_TYPE(NETRC, CURL_NETRC_IGNORED);
