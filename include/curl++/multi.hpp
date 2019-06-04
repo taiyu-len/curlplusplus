@@ -248,5 +248,5 @@ protected:
 
 } // namespace curl
 
-#include "curl++/detail/multi_events.hpp"
+#include "multi_events.hpp"
 #endif // CURLPLUSPLUS_MULTI_HPP

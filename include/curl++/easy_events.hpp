@@ -1,5 +1,5 @@
-#ifndef CURLPLUSPLUS_DETAIL_EASY_EVENTS_HPP
-#define CURLPLUSPLUS_DETAIL_EASY_EVENTS_HPP
+#ifndef CURLPLUSPLUS_EASY_EVENTS_HPP
+#define CURLPLUSPLUS_EASY_EVENTS_HPP
 #include "curl++/easy.hpp"
 #include "curl++/buffer.hpp"
 
@@ -139,4 +139,4 @@ struct easy_ref::progress {
 };
 } // namespace curl
 
-#endif // CURLPLUSPLUS_DETAIL_EASY_EVENTS_HPP
+#endif // CURLPLUSPLUS_EASY_EVENTS_HPP

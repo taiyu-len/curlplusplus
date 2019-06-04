@@ -1,5 +1,5 @@
-#ifndef CURLPLUSPLUS_DETAIL_MULTI_EVENTS_HPP
-#define CURLPLUSPLUS_DETAIL_MULTI_EVENTS_HPP
+#ifndef CURLPLUSPLUS_MULTI_EVENTS_HPP
+#define CURLPLUSPLUS_MULTI_EVENTS_HPP
 #include "curl++/multi.hpp"
 namespace curl {
 // TODO implement
@@ -71,4 +71,4 @@ struct multi_ref::timer {
 };
 
 } // namespace curl
-#endif // CURLPLUSPLUS_DETAIL_MULTI_EVENTS_HPP
+#endif // CURLPLUSPLUS_MULTI_EVENTS_HPP

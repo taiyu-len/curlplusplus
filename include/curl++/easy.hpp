@@ -225,5 +225,5 @@ protected:
 };
 
 } // namespace curl
-#include "curl++/detail/easy_events.hpp"
+#include "easy_events.hpp"
 #endif // CURLPLUSPLUS_EASY_HPP
