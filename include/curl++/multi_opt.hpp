@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_MULTI_OPT_HPP
 #define CURLPLUSPLUS_MULTI_OPT_HPP
-#include "curl++/option.hpp"  // for option_enum, option_base
+#include "option.hpp"  // for option_enum, option_base
 #include <curl/curl.h>        // for CURLMOPT*
 namespace curl {
 namespace option { /* Curl multi options */

@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_GLOBAL_HPP
 #define CURLPLUSPLUS_GLOBAL_HPP
-#include "curl++/invoke.hpp"
+#include "invoke.hpp"
 #include <curl/curl.h>
 namespace curl {
 /**

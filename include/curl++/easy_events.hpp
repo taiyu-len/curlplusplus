@@ -1,7 +1,7 @@
 #ifndef CURLPLUSPLUS_EASY_EVENTS_HPP
 #define CURLPLUSPLUS_EASY_EVENTS_HPP
-#include "curl++/easy.hpp"
-#include "curl++/buffer.hpp"
+#include "easy.hpp"
+#include "buffer.hpp"
 
 namespace curl {
 /**

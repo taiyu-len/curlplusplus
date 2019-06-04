@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_MULTI_EVENTS_HPP
 #define CURLPLUSPLUS_MULTI_EVENTS_HPP
-#include "curl++/multi.hpp"
+#include "multi.hpp"
 namespace curl {
 // TODO implement
 struct multi_ref::push {

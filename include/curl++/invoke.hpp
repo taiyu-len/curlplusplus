@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_INVOKE_HPP
 #define CURLPLUSPLUS_INVOKE_HPP
-#include "curl++/types.hpp"
+#include "types.hpp"
 namespace curl {
 /**
  * Utility function to wrap curl function calls to handle errors appropriatly.

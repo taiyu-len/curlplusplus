@@ -1,6 +1,6 @@
 #ifndef CURLPLUSPLUS_INFO_READ_HPP
 #define CURLPLUSPLUS_INFO_READ_HPP
-#include "curl++/easy.hpp"
+#include "easy.hpp"
 #include <curl/curl.h>
 namespace curl {
 /**
