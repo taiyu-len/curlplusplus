@@ -3,12 +3,10 @@
 #include <iostream>
 int main() try
 {
-	namespace o = curl::option;
-	namespace i = curl::info;
-	auto curl = curl::easy();
-	curl.set(o::url("https://www.example.com"));
+	curl::easy curl;
+	curl.url("https://www.example.com");
 	curl.perform();
-	auto ct = curl.get(i::content_type);
+	auto ct = curl.content_type();
 	if (! ct.empty())
 	{
 		std::cout << "We recieved Content-Type: " << ct << '\n';

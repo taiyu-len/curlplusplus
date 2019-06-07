@@ -1,13 +1,13 @@
 #ifndef CURLPLUSPLUS_EASY_HPP
 #define CURLPLUSPLUS_EASY_HPP
-#include "easy_info.hpp"
-#include "easy_opt.hpp"
 #include "extract_function.hpp"
 #include "handle_base.hpp"
+#include "info.hpp"
 #include "invoke.hpp"
-#include "option.hpp" // for handler
+#include "option.hpp"
 #include "types.hpp"
 
+#include <chrono>
 #include <cstddef>           // for size_t
 #include <curl/curl.h>       // for CURL, curl_easy_*, etc
 #include <stdexcept>         // for exceptions
@@ -21,11 +21,39 @@ struct easy_ref
 	: detail::handle_base<CURL*>
 	, detail::set_handler_base<easy_ref>
 {
-	enum pause_flags : long {
+	/**
+	 * Flags used in pause(pause_flags).
+	 */
+	enum pause_flags : unsigned long {
 		pause_recv = CURLPAUSE_RECV,
 		pause_send = CURLPAUSE_SEND,
 		pause_all  = CURLPAUSE_ALL,
 		pause_cont = CURLPAUSE_CONT
+	};
+
+	/**
+	 * Flags used in setopt(netrc).
+	 */
+	enum class netrc : unsigned long {
+		optional = CURL_NETRC_OPTIONAL,
+		ignored  = CURL_NETRC_IGNORED,
+		required = CURL_NETRC_REQUIRED
+	};
+
+	/**
+	 * Flags used in setopt(httpauth).
+	 */
+	enum class httpauth : unsigned long {
+		basic     = CURLAUTH_BASIC,
+		digest    = CURLAUTH_DIGEST,
+		digest_ie = CURLAUTH_DIGEST_IE,
+		bearer    = CURLAUTH_BEARER,
+		negotiate = CURLAUTH_NEGOTIATE,
+		ntlm      = CURLAUTH_NTLM,
+		ntlm_wb   = CURLAUTH_NTLM_WB,
+		any       = CURLAUTH_ANY,
+		anysafe   = CURLAUTH_ANYSAFE,
+		only      = CURLAUTH_ONLY,
 	};
 
 	// events that can emitted by CURL
@@ -86,47 +114,87 @@ struct easy_ref
 	}
 
 	/**
-	 * see curl_easy_setopt().
-	 * Sets options using types defined in easy_opt.hpp
-	 *
-	 * @throws curl::code
-	 * @pre *this
-	 */
-	template<CURLoption o, typename T>
-	void set(option::detail::easy_option<o, T> x)
-	{
-		invoke(::curl_easy_setopt, _handle, o, x.value);
-	}
-
-	/**
 	 * see curl_easy_setopt.
 	 * set option manually.
 	 *
-	 * @warning Not type safe. avoid this
 	 * @throws curl::code
 	 * @pre *this
 	 */
 	template<typename T>
-	void set(CURLoption o, T x)
+	void setopt(CURLoption o, T x)
 	{
 		invoke(::curl_easy_setopt, _handle, o, x);
 	}
 
 	/**
-	 * see curl_easy_getinfo.
-	 * Gets information for this request from variables defined in
-	 * easy_info.hpp
-	 *
-	 * @throws curl::code
-	 * @pre *this
+	 * Macro to define a function of the form NAME(TYPE) that sets that
+	 * particular option.
 	 */
-	template<CURLINFO I, typename T>
-	auto get(info::detail::info<I, T> x) const -> T
-	{
-		auto y = x.value();
-		invoke(::curl_easy_getinfo, _handle, I, &y);
-		return x.convert(y);
+#define SETOPT_FUNC(NAME, OPTION, TYPE) \
+	void NAME(detail::option<TYPE> x) { setopt(CURLOPT_ ## OPTION, x); }
+
+	/**
+	 * Macro to define a function taking an enumflag of the form
+	 * setopt(FLAG) that sets that particlar option
+	 */
+#define SETFLAG_FUNC(OPTION, TYPE) \
+	void setopt(TYPE x) { \
+		setopt(CURLOPT_ ## OPTION, static_cast<unsigned long>(x)); \
 	}
+
+	SETOPT_FUNC(url             , URL            , std::string);
+	SETOPT_FUNC(verbose         , VERBOSE        , bool);
+	SETOPT_FUNC(no_progress     , NOPROGRESS     , bool);
+	SETOPT_FUNC(follow_location , FOLLOWLOCATION , bool);
+	SETOPT_FUNC(error_buffer    , ERRORBUFFER    , error_buffer);
+	SETOPT_FUNC(share           , SHARE          , detail::handle_base<CURLSH*>);
+	template<typename T>
+	SETOPT_FUNC(userdata        , PRIVATE        , T);
+
+	SETFLAG_FUNC(NETRC   , netrc);
+	SETFLAG_FUNC(HTTPAUTH, httpauth);
+
+#undef  SETOPT_FUNC
+#define GETINFO_FUNC(NAME, OPTION, TYPE) \
+	auto NAME() const -> TYPE { \
+		return detail::info<TYPE>::getinfo(_handle, CURLINFO_ ## OPTION); \
+	}
+
+	GETINFO_FUNC(url                     , EFFECTIVE_URL            , std::string);
+	// TODO make response code type that can stringify the response and whatnot.
+	GETINFO_FUNC(response_code           , RESPONSE_CODE            , long);
+	GETINFO_FUNC(http_connect_code       , HTTP_CONNECTCODE         , long);
+	GETINFO_FUNC(http_version            , HTTP_VERSION             , long);
+
+	GETINFO_FUNC(redirect_count          , REDIRECT_COUNT           , long);
+	GETINFO_FUNC(redirect_url            , REDIRECT_URL             , std::string);
+	// bytes
+	GETINFO_FUNC(size_upload             , SIZE_UPLOAD_T            , curl_off_t);
+	GETINFO_FUNC(size_download           , SIZE_DOWNLOAD_T          , curl_off_t);
+	// bytes per second
+	GETINFO_FUNC(speed_upload            , SPEED_UPLOAD_T           , curl_off_t);
+	GETINFO_FUNC(speed_download          , SPEED_DOWNLOAD_T         , curl_off_t);
+	GETINFO_FUNC(header_size             , HEADER_SIZE              , long);
+	GETINFO_FUNC(request_size            , REQUEST_SIZE             , long);
+	// Bytes
+	GETINFO_FUNC(content_length_download , CONTENT_LENGTH_DOWNLOAD_T, curl_off_t);
+	GETINFO_FUNC(content_length_upload   , CONTENT_LENGTH_UPLOAD_T  , curl_off_t);
+	GETINFO_FUNC(content_type            , CONTENT_TYPE             , std::string);
+
+	// T should be a pointer.
+	template<typename T>
+	GETINFO_FUNC(userdata                , PRIVATE                  , T);
+	// TODO rather then a duration, a timepoint may be better
+	GETINFO_FUNC(filetime                , FILETIME_T               , std::chrono::seconds);
+	// Timings
+	GETINFO_FUNC(total_time              , TOTAL_TIME_T             , std::chrono::microseconds);
+	GETINFO_FUNC(namelookup_time         , NAMELOOKUP_TIME_T        , std::chrono::microseconds);
+	GETINFO_FUNC(connect_time            , CONNECT_TIME_T           , std::chrono::microseconds);
+	GETINFO_FUNC(appconnect_time         , APPCONNECT_TIME_T        , std::chrono::microseconds);
+	GETINFO_FUNC(pretransfer_time        , PRETRANSFER_TIME_T       , std::chrono::microseconds);
+	GETINFO_FUNC(starttransfer_time      , STARTTRANSFER_TIME_T     , std::chrono::microseconds);
+	GETINFO_FUNC(redirect_time           , REDIRECT_TIME_T          , std::chrono::microseconds);
+#undef GETINFO_FUNC
 };
 
 /**

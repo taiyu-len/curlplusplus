@@ -33,13 +33,12 @@ catch (std::exception const& e)
 	return 1;
 }
 
-to_file::to_file(const char* url, const char* filename)
+to_file::to_file(const char* u, const char* filename)
 : stream(filename, std::ios::binary)
 {
-	namespace o = curl::option;
-	set(o::url(url));
-	set(o::verbose(true));
-	set(o::error_buffer(ebuffer));
+	url(u);
+	verbose(true);
+	error_buffer(ebuffer);
 }
 size_t to_file::on(write w) noexcept
 {

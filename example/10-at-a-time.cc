@@ -20,10 +20,9 @@ struct nowrite {
 // add a transfer to a multi handle using an existing easy handle.
 static void add_transfer(curl::multi_ref cm, curl::easy_ref ce, const char* url)
 {
-	namespace o = curl::option;
 	fprintf(stderr, "Adding url %s\n", url);
-	ce.set(o::url(url));
-	ce.set(o::userdata(url));
+	ce.url(url);
+	ce.userdata<const char*>(url);
 	ce.set_handler<curl::easy::write, nowrite>();
 	cm.add_handle(ce);
 }
@@ -42,9 +41,8 @@ int main() try {
 	// initialize global and multi handle.
 	auto g = curl::global();
 	auto m = curl::multi();
-	namespace o = curl::option;
 
-	m.set(o::max_connects{MAX_PARALLEL});
+	m.max_connects(MAX_PARALLEL);
 	auto transfers = size_t(0);
 	// add initial transfers
 	for (auto const& url : urls)
@@ -67,10 +65,9 @@ int main() try {
 			if (msg.msg == CURLMSG_DONE)
 			{
 				auto cc = msg.result;
-				namespace i = curl::info;
 				fprintf(stderr, "R: %d - %s < %s >\n",
 					cc.value, cc.what(),
-					er.get(i::userdata<const char*>));
+					er.userdata<const char*>());
 				m.remove_handle(er);
 			}
 			else

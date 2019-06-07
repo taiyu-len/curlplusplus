@@ -25,16 +25,15 @@ catch (std::exception const& e)
 	return 1;
 }
 
-print_debug::print_debug(std::string const& url, bool trace_ascii)
+print_debug::print_debug(std::string const& u, bool trace_ascii)
 : no_hex(trace_ascii)
 {
-	namespace o = curl::option;
 	/* the DEBUGFUNCTION has no effect until we enable VERBOSE */
-	set(o::verbose(true));
+	verbose(true);
 	/* example.com is redirected, so we tell libcurl to follow redirection */
-	set(o::follow_location(true));
-	set(o::url(url));
-	set(o::error_buffer(ebuffer));
+	follow_location(true);
+	url(u);
+	error_buffer(ebuffer);
 }
 
 int print_debug::on(debug x) noexcept

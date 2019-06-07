@@ -2,6 +2,7 @@
 #define CURLPLUSPLUS_SHARE_HPP
 #include "extract_function.hpp"
 #include "handle_base.hpp"
+#include "option.hpp"
 #include <curl/curl.h>
 #include <utility>
 namespace curl {
@@ -63,6 +64,19 @@ struct share_ref
 	}
 
 	/**
+	 * see curl_share_setopt.
+	 * set option manually.
+	 *
+	 * @throws curl::code
+	 * @pre *this
+	 */
+	template<typename T>
+	void setopt(CURLSHoption o, T x)
+	{
+		invoke(::curl_share_setopt, _handle, o, x);
+	}
+
+	/**
 	 * see curl_share_setopt().
 	 * sets what data to share.
 	 *
@@ -71,7 +85,7 @@ struct share_ref
 	 */
 	void share_data(lock_data data)
 	{
-		invoke(::curl_share_setopt, _handle, CURLSHOPT_SHARE, data);
+		setopt<unsigned long>(CURLSHOPT_SHARE, data);
 	}
 
 	/**
@@ -83,7 +97,7 @@ struct share_ref
 	 */
 	void unshare_data(lock_data data)
 	{
-		invoke(::curl_share_setopt, _handle, CURLSHOPT_UNSHARE, data);
+		setopt<unsigned long>(CURLSHOPT_UNSHARE, data);
 	}
 
 	/**
@@ -115,20 +129,6 @@ struct share_ref
 	{
 		set_handler_base::set_handler< lock,   T >(x);
 		set_handler_base::set_handler< unlock, T >(x);
-	}
-
-	/**
-	 * see curl_share_setopt.
-	 * set option manually.
-	 *
-	 * @warning Not type safe. avoid this
-	 * @throws curl::code
-	 * @pre *this
-	 */
-	template<typename T>
-	void set(CURLSHoption o, T x)
-	{
-		invoke(::curl_share_setopt, _handle, o, x);
 	}
 };
 

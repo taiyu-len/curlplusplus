@@ -3,6 +3,9 @@
 #include <iostream>
 
 struct my_share : curl::share_base<my_share> {
+	my_share() {
+		share_data(connect);
+	}
 	void on(lock) {
 		std::cout << "Mutex locked\n";
 	}
@@ -14,7 +17,6 @@ struct my_share : curl::share_base<my_share> {
 int main()
 {
 	my_share share;
-	share.share_data(share.connect);
 
 	int i;
 
@@ -24,9 +26,8 @@ int main()
 
 	for(i = 0; i < 3; i++) try {
 		curl::easy req;
-		namespace o = curl::option;
-		req.set(o::url("https://www.example.com"));
-		req.set(o::share(share));
+		req.url("https://www.example.com");
+		req.share(share);
 		req.perform();
 	} catch (curl::code const& c) {
 		std::cerr << c.what() << '\n';

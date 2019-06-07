@@ -5,10 +5,9 @@
 struct print_callbacks : curl::easy_base<print_callbacks> {
 	print_callbacks() {
 		std::cout << "==\n== crtp use case\n==\n";
-		namespace o = curl::option;
-		set(o::url("www.example.com"));
-		set(o::verbose(true));
-		set(o::no_progress(false));
+		url("www.example.com");
+		verbose(true);
+		no_progress(false);
 	}
 	static size_t on(write w) {
 		std::cout << "called write   : received " << w.size() << '\n';
@@ -74,11 +73,10 @@ struct static_fn_with_value_cb {
 void plain_usage()
 {
 	std::cout << "==\n== Plain use case\n==\n";
-	namespace o = curl::option;
 	// create a easy handle.
 	auto h = curl::easy();
 	// setup options
-	h.set(o::url("https://www.example.com"));
+	h.url("https://www.example.com");
 
 	// callback with member function.
 	mem_fn_cb mfc;

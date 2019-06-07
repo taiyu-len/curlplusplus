@@ -4,10 +4,10 @@
 #include "handle_base.hpp"
 #include "info_read.hpp"
 #include "invoke.hpp"
-#include "multi_opt.hpp"
 #include "option.hpp"      // for handler
 #include "types.hpp"       // for mcode
-#include <chrono>                 // for milliseconds
+
+#include <chrono>          // for milliseconds
 #include <curl/curl.h>
 #include <iterator>
 #include <utility>
@@ -25,6 +25,12 @@ struct multi_ref
 	: detail::handle_base<CURLM*>
 	, detail::set_handler_base<multi_ref>
 {
+	enum pipelining : unsigned long {
+		nothing   = CURLPIPE_NOTHING,
+		HTTP1     = CURLPIPE_HTTP1,
+		multiplex = CURLPIPE_MULTIPLEX,
+	};
+
 	struct push;
 	struct socket;
 	struct timer;
@@ -155,24 +161,28 @@ struct multi_ref
 	 * @throws curl::code
 	 * @pre *this
 	 */
-	template<CURLMoption o, typename T>
-	void set(option::detail::multi_option<o, T> x)
-	{
-		invoke(::curl_multi_setopt, _handle, o, x.value);
-	}
-
-	/**
-	 * see curl_multi_setopt
-	 *
-	 * @warning not type safe, avoid this
-	 * @throws curl::code
-	 * @pre *this
-	 */
 	template<typename T>
-	void set(CURLMoption o, T x)
+	void setopt(CURLMoption o, T x)
 	{
 		invoke(::curl_multi_setopt, _handle, o, x);
 	}
+
+	/**
+	 * Macro to define a function that can be used to set that particular
+	 * option.
+	 */
+#define SETOPT_FUNC(NAME, OPTION, TYPE) \
+	void NAME(detail::option<TYPE> x) { setopt(CURLMOPT_ ## OPTION, x); }
+
+	SETOPT_FUNC(max_host_connections , MAX_HOST_CONNECTIONS , long);
+	SETOPT_FUNC(max_total_connections, MAX_TOTAL_CONNECTIONS, long);
+	SETOPT_FUNC(max_connects         , MAXCONNECTS          , long);
+
+	void setopt(pipelining x) {
+		setopt(CURLMOPT_PIPELINING, static_cast<unsigned long>(x));
+	}
+
+#undef SETOPT_FUNC
 };
 
 /**

@@ -247,8 +247,8 @@ struct set_handler_base {
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_mem_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have member function `on(Event)`");
-		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
-		self().set(Event::DATA, fptr ? x    : nullptr);
+		self().setopt(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
+		self().setopt(Event::DATA, fptr ? x    : nullptr);
 	}
 
 	/**
@@ -262,8 +262,8 @@ struct set_handler_base {
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn<Event, T>::fptr();
 		static_assert(NoError || fptr, "T does not have static member function `on(Event)`");
-		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
-		self().set(Event::DATA, nullptr);
+		self().setopt(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
+		self().setopt(Event::DATA, nullptr);
 	}
 
 	/**
@@ -277,8 +277,8 @@ struct set_handler_base {
 		using fptr_t = typename Event::signature*;
 		constexpr fptr_t fptr = extract_static_fn_with_data<Event, T, D>::fptr();
 		static_assert(fptr, "T does not have static member function `on(Event, D*)`");
-		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
-		self().set(Event::DATA, fptr ? x    : nullptr);
+		self().setopt(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
+		self().setopt(Event::DATA, fptr ? x    : nullptr);
 	}
 
 #if __cplusplus >= 201703L
@@ -295,8 +295,8 @@ struct set_handler_base {
 	{
 		using fptr_t = typename E::signature*;
 		constexpr fptr_t fptr = extract_fptr<F, E>::fptr();
-		self().set(E::FUNC, fptr ? fptr : get_default<E>::fptr());
-		self().set(E::DATA, nullptr);
+		self().setopt(E::FUNC, fptr ? fptr : get_default<E>::fptr());
+		self().setopt(E::DATA, nullptr);
 	}
 
 	/**
@@ -314,8 +314,8 @@ struct set_handler_base {
 		using fptr_t = typename E::signature*;
 		constexpr fptr_t fptr = extract_fptr_with_data<F, E, D>::fptr();
 		static_assert(fptr, "F can not be called via `F(Event, D)`");
-		self().set(E::FUNC, fptr ? fptr : get_default<E>::fptr());
-		self().set(E::DATA, fptr ? x    : nullptr);
+		self().setopt(E::FUNC, fptr ? fptr : get_default<E>::fptr());
+		self().setopt(E::DATA, fptr ? x    : nullptr);
 	}
 
 #endif
@@ -338,8 +338,8 @@ struct set_handler_base {
 	{
 		constexpr auto fptr = +x;
 		constexpr fptr_t fptr = extract_fptr<fptr>::fptr();
-		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
-		self().set(Event::DATA, nullptr);
+		self().setopt(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
+		self().setopt(Event::DATA, nullptr);
 	}
 
 	/**
@@ -353,8 +353,8 @@ struct set_handler_base {
 	{
 		constexpr auto fptr = +x;
 		constexpr fptr_t fptr = extract_fptr_with_data<fptr, D>::fptr();
-		self().set(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
-		self().set(Event::DATA, fptr ? x    : nullptr);
+		self().setopt(Event::FUNC, fptr ? fptr : get_default<Event>::fptr());
+		self().setopt(Event::DATA, fptr ? x    : nullptr);
 	}
 #endif
 };
