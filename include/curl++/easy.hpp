@@ -148,13 +148,24 @@ struct easy_ref
 	SETOPT_FUNC(follow_location , FOLLOWLOCATION , bool);
 	SETOPT_FUNC(error_buffer    , ERRORBUFFER    , error_buffer);
 	SETOPT_FUNC(share           , SHARE          , detail::handle_base<CURLSH*>);
-	template<typename T>
-	SETOPT_FUNC(userdata        , PRIVATE        , T);
 
 	SETFLAG_FUNC(NETRC   , netrc);
 	SETFLAG_FUNC(HTTPAUTH, httpauth);
 
+	/**
+	 * see CURLOPT_PRIVATE.
+	 */
+	template<typename T>
+	void userdata(T* x)
+	{
+		setopt(CURLOPT_PRIVATE, static_cast<void*>(x));
+	}
+
 #undef  SETOPT_FUNC
+
+	/**
+	 * Macro to generate getinfo function for easy handles.
+	 */
 #define GETINFO_FUNC(NAME, OPTION, TYPE) \
 	auto NAME() const -> TYPE { \
 		return detail::info<TYPE>::getinfo(_handle, CURLINFO_ ## OPTION); \

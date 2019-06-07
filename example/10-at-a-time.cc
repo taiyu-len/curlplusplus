@@ -22,7 +22,7 @@ static void add_transfer(curl::multi_ref cm, curl::easy_ref ce, const char* url)
 {
 	fprintf(stderr, "Adding url %s\n", url);
 	ce.url(url);
-	ce.userdata<const char*>(url);
+	ce.userdata(url);
 	ce.set_handler<curl::easy::write, nowrite>();
 	cm.add_handle(ce);
 }
