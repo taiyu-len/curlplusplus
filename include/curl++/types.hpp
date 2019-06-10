@@ -31,6 +31,16 @@ struct code_template : std::exception {
 		return value != OK;
 	}
 
+	bool operator==(code_template x) const noexcept
+	{
+		return x.value == value;
+	}
+
+	bool operator==(T x) const noexcept
+	{
+		return x == value;
+	}
+
 	const char* what() const noexcept override
 	{
 		return to_string(value);

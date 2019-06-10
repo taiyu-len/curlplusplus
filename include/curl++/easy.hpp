@@ -22,13 +22,28 @@ struct easy_ref
 	, detail::set_handler_base<easy_ref>
 {
 	/**
-	 * Flags used in pause(pause_flags).
+	 * Flag type used in pause(pause_flags).
 	 */
-	enum pause_flags : unsigned long {
-		pause_recv = CURLPAUSE_RECV,
-		pause_send = CURLPAUSE_SEND,
-		pause_all  = CURLPAUSE_ALL,
-		pause_cont = CURLPAUSE_CONT
+	struct pause_t {
+		unsigned long value;
+		constexpr auto operator|(pause_t x) const noexcept -> pause_t
+		{
+			return { value | x.value };
+		}
+		constexpr auto operator|=(pause_t x) noexcept -> pause_t&
+		{
+			value |= x.value; return *this;
+		}
+	};
+
+	/**
+	 * Contains pause flag values.
+	 */
+	struct pause_flag {
+		static constexpr pause_t recv = {CURLPAUSE_RECV};
+		static constexpr pause_t send = {CURLPAUSE_SEND};
+		static constexpr pause_t all  = {CURLPAUSE_ALL};
+		static constexpr pause_t cont = {CURLPAUSE_CONT};
 	};
 
 	/**
@@ -97,9 +112,9 @@ struct easy_ref
 	 * @throws curl::code
 	 * @pre *this
 	 */
-	void pause(pause_flags flags)
+	void pause(pause_t flags)
 	{
-		invoke(::curl_easy_pause, _handle, static_cast<long>(flags));
+		invoke(::curl_easy_pause, _handle, flags.value);
 	}
 
 	/**
@@ -158,7 +173,8 @@ struct easy_ref
 	template<typename T>
 	void userdata(T* x)
 	{
-		setopt(CURLOPT_PRIVATE, static_cast<void*>(x));
+		// store as void* using C style cast.
+		setopt(CURLOPT_PRIVATE, (void*)(x));
 	}
 
 #undef  SETOPT_FUNC
@@ -166,9 +182,9 @@ struct easy_ref
 	/**
 	 * Macro to generate getinfo function for easy handles.
 	 */
-#define GETINFO_FUNC(NAME, OPTION, TYPE) \
-	auto NAME() const -> TYPE { \
-		return detail::info<TYPE>::getinfo(_handle, CURLINFO_ ## OPTION); \
+#define GETINFO_FUNC(NAME, OPTION, ...) \
+	auto NAME() const -> __VA_ARGS__ { \
+		return detail::info<__VA_ARGS__>::getinfo(_handle, CURLINFO_ ## OPTION); \
 	}
 
 	GETINFO_FUNC(url                     , EFFECTIVE_URL            , std::string);
@@ -194,7 +210,8 @@ struct easy_ref
 
 	// T should be a pointer.
 	template<typename T>
-	GETINFO_FUNC(userdata                , PRIVATE                  , T);
+	GETINFO_FUNC( userdata               , PRIVATE
+	            , std::enable_if_t<std::is_pointer<T>::value, T>);
 	// TODO rather then a duration, a timepoint may be better
 	GETINFO_FUNC(filetime                , FILETIME_T               , std::chrono::seconds);
 	// Timings

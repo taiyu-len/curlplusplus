@@ -7,19 +7,25 @@ example code
 #include <iostream>
 
 // Prints headers to stdout
-struct eh : curl::easy<eh> {
-	size_t handle(curl::event::write w) {
+struct eh : curl::easy_base<eh> {
+	size_t on(write w) {
 		return 0;
 	}
-	size_t handle(curl::event::header x) {
+	size_t on(header x) {
 		std::printf("%*s", x.size, x.data);
 		return x.size;
 	}
 };
 
-int main() {
+int main() try {
 	eh h;
-	h.set(curl::option::url{"www.example.com"});
+	h.url("www.example.com");
 	h.perform();
+} catch (curl::code &c) {
+	if (c == CURLE_WRITE_ERROR)
+		return 0;
+	std::cout << c.what() << '\n';
 }
 ```
+
+see example dir for more examples.
