@@ -5,7 +5,7 @@
 namespace curl {
 
 struct share::lock {
-	using signature = void(CURL*, ::curl_lock_data, ::curl_lock_access, void*);
+	using signature = void(CURL*, ::curl_lock_data, ::curl_lock_access, userptr);
 	static constexpr CURLSHoption FUNC = CURLSHOPT_LOCKFUNC;
 	static constexpr CURLSHoption DATA = CURLSHOPT_USERDATA;
 
@@ -16,19 +16,13 @@ struct share::lock {
 	, access(static_cast<share::lock_access>(access))
 	{}
 
-	static auto dataptr( CURL*, ::curl_lock_data, ::curl_lock_access
-	                   , void* x) noexcept -> void*
-	{
-		return x;
-	}
-
 	easy_ref           handle;
 	share::lock_data   data;
 	share::lock_access access;
 };
 
 struct share::unlock {
-	using signature = void(CURL*, ::curl_lock_data, void*);
+	using signature = void(CURL*, ::curl_lock_data, userptr);
 	static constexpr CURLSHoption FUNC = CURLSHOPT_UNLOCKFUNC;
 	static constexpr CURLSHoption DATA = CURLSHOPT_USERDATA;
 
@@ -36,11 +30,6 @@ struct share::unlock {
 	: handle(handle)
 	, data(static_cast<share::lock_data>(data))
 	{}
-
-	static auto dataptr(CURL*, ::curl_lock_data, void* x) noexcept -> void*
-	{
-		return x;
-	}
 
 	easy_ref           handle;
 	share::lock_data   data;

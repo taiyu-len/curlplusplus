@@ -4,22 +4,17 @@
 namespace curl {
 // TODO implement
 struct multi_ref::push {
-	using signature = int(CURL*, CURL*, size_t, curl_pushheaders*, void*);
+	using signature = int(CURL*, CURL*, size_t, curl_pushheaders*, userptr);
 
 	static constexpr CURLMoption FUNC = CURLMOPT_PUSHFUNCTION;
 	static constexpr CURLMoption DATA = CURLMOPT_PUSHDATA;
 
 	push(CURL*, CURL*, size_t, curl_pushheaders*, void*)
 	{}
-
-	static void* dataptr(CURL*, CURL*, size_t, curl_pushheaders*, void* x) noexcept
-	{
-		return x;
-	}
 };
 
 struct multi_ref::socket {
-	using signature = int(CURL*, curl_socket_t, int, void*, void*);
+	using signature = int(CURL*, curl_socket_t, int, userptr, void*);
 
 	static constexpr CURLMoption FUNC = CURLMOPT_SOCKETFUNCTION;
 	static constexpr CURLMoption DATA = CURLMOPT_SOCKETDATA;
@@ -43,15 +38,10 @@ struct multi_ref::socket {
 	, what(static_cast<poll>(w))
 	, data(d)
 	{}
-
-	static void* dataptr(CURL*, curl_socket_t, int, void* x, void*) noexcept
-	{
-		return x;
-	}
 };
 
 struct multi_ref::timer {
-	using signature = int(CURLM*, long, void*);
+	using signature = int(CURLM*, long, userptr);
 
 	static constexpr CURLMoption FUNC = CURLMOPT_TIMERFUNCTION;
 	static constexpr CURLMoption DATA = CURLMOPT_TIMERDATA;
@@ -63,11 +53,6 @@ struct multi_ref::timer {
 	: multi(m)
 	, timeout(timeout_ms)
 	{}
-
-	static void* dataptr(CURLM*, long, void* x) noexcept
-	{
-		return x;
-	}
 };
 
 } // namespace curl

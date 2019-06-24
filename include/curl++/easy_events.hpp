@@ -8,7 +8,7 @@ namespace curl {
  * see CURLOPT_WRITEFUNCTION.
  */
 struct easy_ref::write : const_buffer {
-	using signature = size_t(const char*, size_t, size_t, void*);
+	using signature = size_t(const char*, size_t, size_t, userptr);
 
 	static constexpr CURLoption FUNC = CURLOPT_WRITEFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_WRITEDATA;
@@ -20,18 +20,13 @@ struct easy_ref::write : const_buffer {
 	write(const char* d, size_t s, size_t t, void*) noexcept
 	: const_buffer(d, s*t)
 	{};
-
-	static auto dataptr(const char*, size_t, size_t, void* x) noexcept -> void*
-	{
-		return x;
-	}
 };
 
 /**
  * see CURLOPT_HEADERFUNCTION.
  */
 struct easy_ref::header : const_buffer {
-	using signature = size_t(const char*, size_t, size_t, void*);
+	using signature = size_t(const char*, size_t, size_t, userptr);
 
 	static constexpr CURLoption FUNC = CURLOPT_HEADERFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_HEADERDATA;
@@ -39,18 +34,13 @@ struct easy_ref::header : const_buffer {
 	header(const char* d, size_t s, size_t t, void*) noexcept
 	: const_buffer(d, s*t)
 	{};
-
-	static auto dataptr(const char*, size_t, size_t, void* x) noexcept
-	{
-		return x;
-	}
 };
 
 /**
  * see CURLOPT_READFUNCTION.
  */
 struct easy_ref::read : mutable_buffer {
-	using signature = size_t(char*, size_t, size_t, void*);
+	using signature = size_t(char*, size_t, size_t, userptr);
 
 	static constexpr CURLoption FUNC = CURLOPT_READFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_READDATA;
@@ -58,18 +48,13 @@ struct easy_ref::read : mutable_buffer {
 	read(char* d, size_t s, size_t t, void*) noexcept
 	: mutable_buffer(d, s*t)
 	{};
-
-	static auto dataptr(char*, size_t, size_t, void* x) noexcept
-	{
-		return x;
-	}
 };
 
 /**
  * see CURLOPT_DEBUGFUNCTION.
  */
 struct easy_ref::debug : const_buffer {
-	using signature = int(CURL*, infotype, char*, size_t, void*);
+	using signature = int(CURL*, infotype, char*, size_t, userptr);
 
 	static constexpr CURLoption FUNC = CURLOPT_DEBUGFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_DEBUGDATA;
@@ -82,18 +67,13 @@ struct easy_ref::debug : const_buffer {
 	, handle(e)
 	, type(i)
 	{}
-
-	static auto dataptr(CURL*, infotype, char*, size_t, void* x) noexcept -> void*
-	{
-		return x;
-	}
 };
 
 /**
  * see CURLOPT_SEEKFUNCTION.
  */
 struct easy_ref::seek {
-	using signature = int(void*, curl_off_t, int);
+	using signature = int(userptr, curl_off_t, int);
 
 	static constexpr CURLoption FUNC = CURLOPT_SEEKFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_SEEKDATA;
@@ -105,18 +85,13 @@ struct easy_ref::seek {
 	: offset(offset)
 	, origin(origin)
 	{}
-
-	static auto dataptr(void* x, curl_off_t, int) noexcept -> void*
-	{
-		return x;
-	}
 };
 
 /**
  * see CURLOPT_XFERINFOFUNCTION.
  */
 struct easy_ref::progress {
-	using signature = int(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
+	using signature = int(userptr, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
 
 	static constexpr CURLoption FUNC = CURLOPT_XFERINFOFUNCTION;
 	static constexpr CURLoption DATA = CURLOPT_XFERINFODATA;
@@ -130,12 +105,6 @@ struct easy_ref::progress {
 	, ultotal(ut)
 	, ulnow(un)
 	{}
-
-	static auto dataptr(void* x, curl_off_t, curl_off_t,
-	                    curl_off_t, curl_off_t) noexcept -> void*
-	{
-		return x;
-	}
 };
 } // namespace curl
 
